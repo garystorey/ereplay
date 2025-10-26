@@ -8,12 +8,12 @@ const KEYS_CODES = [
   "ArrowRight",
   "ArrowUp",
   "KeyQ",
-  "KeyW",
-  "KeyE",
-  "KeyR",
   "KeyA",
+  "KeyW",
   "KeyS",
+  "KeyE",
   "KeyD",
+  "KeyR",
   "KeyF",
 ];
 const KEYS_LABELS = [
@@ -22,12 +22,12 @@ const KEYS_LABELS = [
   "R",
   "U",
   "P1",
-  "P2",
-  "P3",
-  "P4",
   "K1",
+  "P2",
   "K2",
+  "P3",
   "K3",
+  "P4",
   "K4",
 ];
 const PERFECT_WIN = 5; // ms
@@ -117,9 +117,23 @@ let hitY = 0;
 /* ========== Utility helpers ==========
  * Generic helpers used by multiple systems.
  * ====================================== */
+const LANE_BASE_COLORS = [
+  "#ff4d4f",
+  "#ff4d4f",
+  "#ff4d4f",
+  "#ff4d4f",
+  "#00c853",
+  "#3579f6",
+  "#00c853",
+  "#3579f6",
+  "#00c853",
+  "#3579f6",
+  "#00c853",
+  "#3579f6",
+];
+
 function laneColor(lane) {
-  const hue = Math.round((lane * 360) / LANES);
-  return `hsl(${hue}deg 90% 60%)`;
+  return LANE_BASE_COLORS[lane] ?? "#ffffff";
 }
 
 function resizeCanvasToDisplaySize() {
@@ -962,10 +976,12 @@ function draw() {
     const x = laneToX(l);
     const label = KEYS_LABELS[l] ?? "";
     ctx.beginPath();
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = "rgba(255,255,255,0.06)";
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = laneColor(l);
+    ctx.globalAlpha = 0.65;
     ctx.arc(x, hitY, radius + 6, 0, Math.PI * 2);
     ctx.stroke();
+    ctx.globalAlpha = 1;
 
     if (label) {
       ctx.save();
@@ -995,13 +1011,15 @@ function draw() {
 
     ctx.beginPath();
     ctx.arc(noteX, y, radius, 0, Math.PI * 2);
-    ctx.fillStyle = laneColor(n.lane);
+    const baseColor = laneColor(n.lane);
+    ctx.fillStyle = baseColor;
     ctx.globalAlpha = n.judged ? 0.25 : 0.95;
     ctx.fill();
 
     if (!n.judged) {
       ctx.lineWidth = 2;
-      ctx.strokeStyle = "rgba(255,255,255,0.1)";
+      ctx.strokeStyle = baseColor;
+      ctx.globalAlpha = 0.9;
       ctx.stroke();
     }
     ctx.globalAlpha = 1;
