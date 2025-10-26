@@ -49,6 +49,10 @@ const RESULT_COLORS = {
 
 const AUTOPLAY_MISS_RATE = 0.12;
 const AUTOPLAY_HIT_WINDOW = 18; // ms window around the planned hit time
+const AUTOPLAY_MODES = {
+  REALISTIC: "realistic",
+  PERFECT: "perfect",
+};
 
 /* ========== DOM references ==========
  * Cached references to frequently accessed DOM elements.
@@ -72,6 +76,7 @@ const restartBtn = document.getElementById("restartBtn");
 const dropMs = document.getElementById("dropMs");
 const dropMsLbl = document.getElementById("dropMsLbl");
 const autoplayChk = document.getElementById("autoplay");
+const autoplayMode = document.getElementById("autoplayMode");
 const loopChk = document.getElementById("loopChk");
 const preRollMs = document.getElementById("preRollMs");
 const preRollLbl = document.getElementById("preRollLbl");
@@ -80,6 +85,13 @@ const pads = document.getElementById("pads");
 const resultsOverlay = document.getElementById("resultsOverlay");
 const chartGrid = document.getElementById("chartGrid");
 const chartBackdrop = document.getElementById("chartBackdrop");
+
+if (autoplayMode) {
+  autoplayMode.disabled = !autoplayChk.checked;
+  autoplayChk.addEventListener("change", () => {
+    autoplayMode.disabled = !autoplayChk.checked;
+  });
+}
 
 /* ========== Game state ==========
  * Mutable state used throughout the gameplay loop.
@@ -171,6 +183,7 @@ function resetNoteRuntimeFields(note) {
   delete note._autoPlanned;
   delete note._autoWillMiss;
   delete note._autoTargetTime;
+  delete note._autoPlannedMode;
 }
 
 function hashData(data) {
@@ -736,9 +749,12 @@ function judgeDelta(delta) {
   return null;
 }
 
-function tryHitLane(lane) {
+function tryHitLane(lane, options = {}) {
   if (prerolling) return;
-  const t = currentTimeMs();
+  const t =
+    options && typeof options.forcedTime === "number"
+      ? options.forcedTime
+      : currentTimeMs();
   let target = null;
   let bestAd = Infinity;
   for (const n of notes) {
@@ -793,13 +809,32 @@ function autoPlayStep(t) {
   if (prerolling) return;
   if (!autoplayChk.checked) return;
 
+  const mode =
+    autoplayMode && autoplayMode.value
+      ? autoplayMode.value
+      : AUTOPLAY_MODES.REALISTIC;
+
   for (const n of notes) {
     if (n.judged) continue;
+    if (mode === AUTOPLAY_MODES.PERFECT) {
+      if (t < n.time) continue;
+      tryHitLane(n.lane, { forcedTime: n.time });
+      continue;
+    }
+
+    if (n._autoPlanned && n._autoPlannedMode !== mode) {
+      n._autoPlanned = false;
+      delete n._autoWillMiss;
+      delete n._autoTargetTime;
+      delete n._autoPlannedMode;
+    }
+
     const dt = t - n.time;
     if (dt < -200) continue;
 
     if (!n._autoPlanned) {
       n._autoPlanned = true;
+      n._autoPlannedMode = mode;
       if (Math.random() < AUTOPLAY_MISS_RATE) {
         n._autoWillMiss = true;
       } else {
