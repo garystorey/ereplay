@@ -579,7 +579,10 @@ function fillLegendAndPads() {
   for (let l = 0; l < LANES; l++) {
     const pad = document.createElement("div");
     pad.className = "pad";
-    pad.textContent = KEYS_LABELS[l];
+    const label = document.createElement("span");
+    label.className = "pad-label";
+    label.textContent = KEYS_LABELS[l];
+    pad.appendChild(label);
     pad.style.borderColor = "#2b3569";
     pad.style.color = laneColor(l);
     pad.addEventListener("pointerdown", () => tryHitLane(l));
