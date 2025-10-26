@@ -12,6 +12,13 @@ let DROP_MS = 2000;       // ms from spawn to hit line
 const GLOBAL_OFFSET = 0;  // fixed: no manual calibration (ms)
 let PRE_ROLL_MS = 3000;   // ms of pre-roll (adjustable)
 
+const RESULT_COLORS = {
+    perfect: '#62d26f',
+    good: '#f6d860',
+    okay: '#ff8c42',
+    miss: '#ff4d4f',
+};
+
 /* ========== DOM references ==========
  * Cached references to frequently accessed DOM elements.
  * ===================================== */
@@ -52,6 +59,7 @@ let floatTexts = []; // {x,y,text,color,ttl}
 let judgedCount = 0;
 let score = 0;
 let combo = 0;
+let longestCombo = 0;
 let startTime = null;
 let playing = false;
 let pausedAt = 0; // time when paused (ms)
@@ -111,6 +119,7 @@ function resetStats() {
     judgedCount = 0;
     score = 0;
     combo = 0;
+    longestCombo = 0;
     pPerf.textContent = pGood.textContent = pOk.textContent = pMiss.textContent = '0';
     scoreEl.textContent = '0';
     comboEl.textContent = '0';
@@ -162,6 +171,8 @@ function createPieChart(canvasEl, stats) {
     if (canvasEl.chart) {
         canvasEl.chart.destroy();
     }
+    canvasEl.width = 260;
+    canvasEl.height = 260;
     canvasEl.chart = new Chart(chartCtx, {
         type: 'pie',
         data: {
@@ -169,15 +180,20 @@ function createPieChart(canvasEl, stats) {
             datasets: [
                 {
                     data: [stats.perfect, stats.good, stats.okay, stats.miss],
-                    backgroundColor: ['#62d26f', '#6fd3ff', '#ffd166', '#ff6b6b'],
+                    backgroundColor: [
+                        RESULT_COLORS.perfect,
+                        RESULT_COLORS.good,
+                        RESULT_COLORS.okay,
+                        RESULT_COLORS.miss,
+                    ],
                     borderColor: '#1a2244',
                     borderWidth: 2,
                 },
             ],
         },
         options: {
-            responsive: true,
-            maintainAspectRatio: true,
+            responsive: false,
+            maintainAspectRatio: false,
             layout: { padding: { bottom: 10 } },
             plugins: {
                 legend: {
@@ -197,6 +213,23 @@ function createPieChart(canvasEl, stats) {
     });
 }
 
+function createSummaryItem(label, value) {
+    const item = document.createElement('div');
+    item.className = 'summary-item';
+
+    const labelEl = document.createElement('span');
+    labelEl.className = 'summary-label';
+    labelEl.textContent = label;
+
+    const valueEl = document.createElement('span');
+    valueEl.className = 'summary-value';
+    valueEl.textContent = value;
+
+    item.appendChild(labelEl);
+    item.appendChild(valueEl);
+    return item;
+}
+
 function updateHighScore() {
     const currentStats = {
         perfect: +pPerf.textContent,
@@ -204,6 +237,7 @@ function updateHighScore() {
         okay: +pOk.textContent,
         miss: +pMiss.textContent,
         score,
+        longestStreak: longestCombo,
     };
 
     if (!scoreHistory.has(currentDataHash)) {
@@ -212,6 +246,7 @@ function updateHighScore() {
             worst: { ...currentStats },
             total: { ...currentStats },
             runs: 1,
+            longestStreak: currentStats.longestStreak,
         });
         return;
     }
@@ -223,6 +258,7 @@ function updateHighScore() {
     record.total.okay += currentStats.okay;
     record.total.miss += currentStats.miss;
     record.total.score += currentStats.score;
+    record.total.longestStreak = Math.max(record.total.longestStreak ?? 0, currentStats.longestStreak);
 
     if (currentStats.score > record.best.score) {
         record.best = { ...currentStats };
@@ -230,6 +266,7 @@ function updateHighScore() {
     if (currentStats.score < record.worst.score) {
         record.worst = { ...currentStats };
     }
+    record.longestStreak = Math.max(record.longestStreak ?? 0, currentStats.longestStreak);
 }
 
 function showResults() {
@@ -240,27 +277,31 @@ function showResults() {
         okay: +pOk.textContent,
         miss: +pMiss.textContent,
         score,
+        longestStreak: longestCombo,
     };
 
-    if (scoreHistory.has(currentDataHash) && scoreHistory.get(currentDataHash).runs > 1) {
-        const record = scoreHistory.get(currentDataHash);
-        const { best, worst, total, runs } = record;
+    const record = scoreHistory.get(currentDataHash);
+    const runs = record ? record.runs : 1;
+    const highScore = record ? record.best.score : currentStats.score;
+    const longestStreak = record ? Math.max(record.longestStreak ?? 0, currentStats.longestStreak) : currentStats.longestStreak;
 
-        const highScoreEl = document.createElement('div');
-        highScoreEl.className = 'high-score';
-        highScoreEl.textContent = `High Score: ${best.score}`;
-        chartGrid.appendChild(highScoreEl);
+    const summary = document.createElement('div');
+    summary.className = 'chart-summary';
+    summary.appendChild(createSummaryItem('Runs', runs));
+    summary.appendChild(createSummaryItem('High Score', highScore));
+    summary.appendChild(createSummaryItem('Longest Streak', longestStreak));
+    chartGrid.appendChild(summary);
 
-        const runCountEl = document.createElement('div');
-        runCountEl.className = 'run-count';
-        runCountEl.textContent = `Runs tracked: ${runs}`;
-        chartGrid.appendChild(runCountEl);
+    if (record && record.runs > 1) {
+        const { best, worst, total } = record;
 
         const cumulativeRow = document.createElement('div');
         cumulativeRow.className = 'charts-row';
         const cumulativeCol = document.createElement('div');
         cumulativeCol.className = 'chart-column';
-        const { container: cumulativeContainer, canvas: cumulativeCanvas } = createChartContainer('Total Stats Across All Runs');
+        const { container: cumulativeContainer, canvas: cumulativeCanvas } = createChartContainer(
+            'Total Stats Across All Runs'
+        );
         cumulativeCol.appendChild(cumulativeContainer);
         cumulativeRow.appendChild(cumulativeCol);
         chartGrid.appendChild(cumulativeRow);
@@ -269,7 +310,6 @@ function showResults() {
 
         const chartsRow = document.createElement('div');
         chartsRow.className = 'charts-row';
-        chartsRow.style.marginTop = '2rem';
 
         const bestColumn = document.createElement('div');
         bestColumn.className = 'chart-column';
@@ -288,11 +328,14 @@ function showResults() {
         createPieChart(bestCanvas, best);
         createPieChart(worstCanvas, worst);
     } else {
+        const singleRow = document.createElement('div');
+        singleRow.className = 'charts-row';
         const column = document.createElement('div');
         column.className = 'chart-column';
         const { container, canvas: chartCanvas } = createChartContainer('Results');
         column.appendChild(container);
-        chartGrid.appendChild(column);
+        singleRow.appendChild(column);
+        chartGrid.appendChild(singleRow);
         createPieChart(chartCanvas, currentStats);
     }
 
@@ -555,9 +598,9 @@ window.addEventListener('keydown', (e) => {
  * ============================================ */
 function judgeDelta(delta) {
     const ad = Math.abs(delta);
-    if (ad <= PERFECT_WIN) return { label: 'Perfect', score: 300, color: '#00ff00' };
-    if (ad <= GOOD_WIN) return { label: 'Good', score: 120, color: '#deff22ff' };
-    if (ad <= OK_WIN) return { label: 'Okay', score: 50, color: '#f78e05ff' };
+    if (ad <= PERFECT_WIN) return { label: 'Perfect', score: 300, color: RESULT_COLORS.perfect };
+    if (ad <= GOOD_WIN) return { label: 'Good', score: 120, color: RESULT_COLORS.good };
+    if (ad <= OK_WIN) return { label: 'Okay', score: 50, color: RESULT_COLORS.okay };
     return null;
 }
 
@@ -586,6 +629,7 @@ function tryHitLane(lane) {
     target.hit = true;
     score += judgement.score;
     combo += 1;
+    if (combo > longestCombo) longestCombo = combo;
     judgedCount += 1;
 
     if (judgement.label === 'Perfect') pPerf.textContent = +pPerf.textContent + 1;
@@ -705,7 +749,7 @@ function draw() {
             comboEl.textContent = combo;
             pMiss.textContent = +pMiss.textContent + 1;
             const x = laneToX(n.lane);
-            addFloatText(x, hitY + 14, 'Miss', '#c00707ff');
+            addFloatText(x, hitY + 14, 'Miss', RESULT_COLORS.miss);
         }
     }
 
