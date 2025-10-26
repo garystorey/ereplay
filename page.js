@@ -118,18 +118,18 @@ let hitY = 0;
  * Generic helpers used by multiple systems.
  * ====================================== */
 const LANE_BASE_COLORS = [
-  "#ff4d4f",
-  "#ff4d4f",
-  "#ff4d4f",
-  "#ff4d4f",
-  "#00c853",
-  "#3579f6",
-  "#00c853",
-  "#3579f6",
-  "#00c853",
-  "#3579f6",
-  "#00c853",
-  "#3579f6",
+  "#ff6b6b", // L
+  "#ff5252", // D
+  "#ff3b30", // R
+  "#ff1744", // U
+  "#66bb6a", // P1
+  "#64b5f6", // K1
+  "#43a047", // P2
+  "#1e88e5", // K2
+  "#2e7d32", // P3
+  "#1565c0", // K3
+  "#1b5e20", // P4
+  "#0d47a1", // K4
 ];
 
 function laneColor(lane) {
