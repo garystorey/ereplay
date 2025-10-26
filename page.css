@@ -1,0 +1,303 @@
+        :root {
+            --bg: #0f1220;
+            --panel: #171b2e;
+            --ink: #e7e9f5;
+            --muted: #9aa3c0;
+            --accent: #7aa7ff;
+            --good: #62d26f;
+            --ok: #ffd166;
+            --miss: #ff6b6b;
+        }
+
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            background: var(--bg);
+            color: var(--ink);
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+        }
+
+        header,
+        footer {
+            padding: 10px 14px;
+            background: var(--panel);
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+
+        main {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 12px;
+            padding: 12px;
+        }
+
+        @media (max-width: 1000px) {
+            main {
+                grid-template-columns: 1fr;
+            }
+        }
+
+
+        .results-overlay {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--panel);
+            border: 1px solid #2f3a6b;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            width: 40vw;
+            min-width: 500px;
+            padding: 1.5rem;
+        }
+
+        .results-overlay.visible {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 180px;
+            margin: 0 auto;
+            padding: 0.5rem;
+        }
+
+        .chart-grid {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            gap: 1rem;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .charts-row {
+            display: flex;
+            flex-direction: row;
+            gap: 1rem;
+            width: 100%;
+        }
+
+        .chart-column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            /* Prevents flex items from overflowing */
+        }
+
+        .chart-title {
+            text-align: center;
+            margin-bottom: 1rem;
+            color: var(--ink);
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .close-overlay {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            background: none;
+            border: none;
+            color: var(--muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s;
+            padding: 0;
+        }
+
+        .close-overlay:hover {
+            color: var(--ink);
+        }
+
+        .chart-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 18, 32, 0.75);
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .chart-backdrop.visible {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .high-score {
+            color: var(--good);
+            font-weight: bold;
+            font-size: 1.5rem;
+            text-align: center;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 10px rgba(98, 210, 111, 0.3);
+        }
+
+
+        .panel {
+            background: var(--panel);
+            border: 1px solid #1f2440;
+            border-radius: 10px;
+            padding: 12px;
+        }
+
+        label {
+            display: block;
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 10px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 240px;
+            resize: vertical;
+            background: #0b0e1a;
+            color: var(--ink);
+            border: 1px solid #222645;
+            border-radius: 8px;
+            padding: 10px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        }
+
+        .row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 8px 0;
+        }
+
+        button,
+        input[type="checkbox"]+span,
+        .pill {
+            background: #273053;
+            color: var(--ink);
+            border: 1px solid #2f3a6b;
+            border-radius: 8px;
+            padding: 8px 10px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        button:hover {
+            filter: brightness(1.1);
+        }
+
+        .muted {
+            color: var(--muted);
+        }
+
+
+        #gameCanvas {
+            width: 80%;
+            height: 70vh;
+            display: block;
+            margin: 0 auto;
+            background: linear-gradient(180deg, #0b0f1e, #0d1122 60%, #0d1020);
+            border-radius: 12px;
+        }
+
+        /* Ensure canvasWrap fills the right column and centers the canvas */
+        #canvasWrap {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(180deg, #0b0f1e, #0d1122 60%, #0d1020);
+            border-radius: 12px;
+            padding: 12px;
+        }
+
+        .hud {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 8px;
+            margin-top: 8px;
+            font-size: 14px;
+        }
+
+        .stat {
+            background: #11162b;
+            border: 1px solid #222a4e;
+            padding: 8px 10px;
+            border-radius: 10px;
+        }
+
+        .stat .big {
+            font-weight: 800;
+            font-size: 20px;
+        }
+
+        .legend {
+            display: grid;
+            grid-template-columns: repeat(14, 1fr);
+            gap: 4px;
+            margin-top: 8px;
+        }
+
+        .laneKey {
+            text-align: center;
+            background: #11162b;
+            border: 1px solid #1f2440;
+            border-radius: 6px;
+            padding: 6px 0;
+            font-weight: 700;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .pads {
+            display: grid;
+            grid-template-columns: repeat(14, 1fr);
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .pad {
+            user-select: none;
+            text-align: center;
+            padding: 8px 0;
+            border-radius: 10px;
+            background: #1a2244;
+            border: 1px solid #273053;
+            color: var(--muted);
+        }
+
+        .pad:active {
+            transform: translateY(1px);
+        }
+
+        small.meta {
+            color: var(--muted);
+            display: block;
+            margin-top: 6px;
+            line-height: 1.3;
+        }

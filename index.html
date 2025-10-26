@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="page.css" />
+    <title>EReplay</title>
+
+</head>
+
+<body>
+    <header>
+        <strong>EReplay</strong>
+    </header>
+
+    <main>
+        <!-- Left panel: data + controls -->
+        <section class="panel" aria-label="Data and Controls">
+            <div class="row">
+                <button id="loadBtn" title="Parse JSON below into notes">Load Data</button>
+                <button id="playBtn">Play</button>
+                <button id="pauseBtn">Pause</button>
+                <button id="restartBtn">Restart</button>
+            </div>
+
+            <div class="row">
+                <label>Scroll Time : <span id="dropMsLbl">2000</span><br />
+                    <input id="dropMs" type="range" min="1000" max="5000" step="1000" value="3000" />
+                    <p>the time for a button to travel from top to hit line</p>
+                </label>
+                <label>Pre-roll (seconds): <span id="preRollLbl">3</span><br />
+                    <input id="preRollMs" type="range" min="1000" max="5000" step="1000" value="3000" />
+                    <p>time before the first button hits</p>
+                </label>
+                <div class="row" style="align-items:center">
+                    <label style="display:flex; gap:8px; align-items:center; margin:0">
+                        <input type="checkbox" id="autoplay" />
+                        <span>Autoplay</span>
+                    </label>
+                    <label style="display:flex; gap:8px; align-items:center; margin:0">
+                        <input type="checkbox" id="loopChk" />
+                        <span>Loop</span>
+                    </label>
+                </div>
+            </div>
+
+            <label for="inputData">Recorded Data (JSON)</label>
+            <textarea id="inputData" spellcheck="false"></textarea>
+            <small class="meta" id="metaLine"></small>
+            <div class="legend" id="legend"></div>
+            <div class="pads" id="pads"></div>
+        </section>
+
+        <!-- Right: game canvas + HUD -->
+        <section>
+            <div id="canvasWrap">
+                <canvas id="gameCanvas" width="1280" height="720" aria-label="Gameplay Area"></canvas>
+            </div>
+            <div class="hud">
+                <div class="stat">Score<br><span class="big" id="scoreEl">0</span></div>
+                <div class="stat">Streak<br><span class="big" id="comboEl">0</span></div>
+                <div class="stat">Results<br>
+                    <span>Perfect: <span id="pPerf">0</span></span><br />
+                    <span>Good: <span id="pGood">0</span></span><br />
+                    <span>Okay: <span id="pOk">0</span></span><br />
+                    <span>Miss: <span id="pMiss">0</span></span>
+                </div>
+                <div class="stat">Now<br><span class="big" id="timeEl">0.000s</span></div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="muted">
+        Keys: 1 2 3 4 5 6 7 Q W E R T Y U &nbsp;•&nbsp; Hit windows: Perfect ±10ms, Good ±40ms, Okay ±80ms
+    </footer>
+
+    <div class="chart-backdrop" id="chartBackdrop"></div>
+    <div class="results-overlay" id="resultsOverlay">
+        <button class="close-overlay" id="closeOverlay">×</button>
+        <div class="chart-grid" id="chartGrid"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="./page.js"></script>
+
+    </script>
+</body>
+
+</html>
