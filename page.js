@@ -185,7 +185,10 @@ const LANE_TEXT_COLORS = LANE_BASE_COLORS.map((color) =>
   bestTextColorForBackground(color)
 );
 
+const FORCE_WHITE_TEXT_LANES = new Set([0, 1, 2, 3]);
+
 function laneTextColor(lane) {
+  if (FORCE_WHITE_TEXT_LANES.has(lane)) return "#ffffff";
   return LANE_TEXT_COLORS[lane] ?? "#000000";
 }
 
@@ -1049,8 +1052,8 @@ function draw() {
         "800 16px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "top";
-      ctx.fillStyle = laneTextColor(l);
-      ctx.shadowColor = laneTextShadowColor(l);
+      ctx.fillStyle = "#ffffff";
+      ctx.shadowColor = "rgba(0, 0, 0, 0.65)";
       ctx.shadowBlur = 6;
       ctx.fillText(label, x, hitY + radius + 10);
       ctx.restore();
