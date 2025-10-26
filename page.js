@@ -1033,7 +1033,7 @@ function draw() {
 
   const travel = hitY - topMargin;
   const laneWidth = canvas.clientWidth / LANES;
-  const radius = Math.max(5, Math.min(Math.floor((laneWidth * 0.6) / 2), 14));
+  const radius = Math.max(6, Math.min(Math.floor((laneWidth * 0.68) / 2), 24));
 
   for (let l = 0; l < LANES; l++) {
     const x = laneToX(l);
@@ -1049,13 +1049,13 @@ function draw() {
     if (label) {
       ctx.save();
       ctx.font =
-        "800 16px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
+        "800 22px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "top";
       ctx.fillStyle = "#ffffff";
       ctx.shadowColor = "rgba(0, 0, 0, 0.65)";
       ctx.shadowBlur = 6;
-      ctx.fillText(label, x, hitY + radius + 10);
+      ctx.fillText(label, x, hitY + radius + 12);
       ctx.restore();
     }
   }
@@ -1092,12 +1092,12 @@ function draw() {
     if (label) {
       ctx.save();
       ctx.font =
-        "800 16px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
+        "800 22px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillStyle = laneTextColor(n.lane);
       ctx.shadowColor = laneTextShadowColor(n.lane);
-      ctx.shadowBlur = 8;
+      ctx.shadowBlur = 10;
       ctx.fillText(label, noteX, y);
       ctx.restore();
     }
