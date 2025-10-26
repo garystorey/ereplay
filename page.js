@@ -17,10 +17,10 @@ const KEYS_CODES = [
   "KeyF",
 ];
 const KEYS_LABELS = [
-  "L",
-  "D",
-  "R",
-  "U",
+  "←",
+  "↓",
+  "→",
+  "↑",
   "P1",
   "K1",
   "P2",
@@ -134,6 +134,59 @@ const LANE_BASE_COLORS = [
 
 function laneColor(lane) {
   return LANE_BASE_COLORS[lane] ?? "#ffffff";
+}
+
+function srgbToLinear(value) {
+  const channel = value / 255;
+  return channel <= 0.04045
+    ? channel / 12.92
+    : Math.pow((channel + 0.055) / 1.055, 2.4);
+}
+
+function relativeLuminance(hexColor) {
+  const match = /^#?([0-9a-f]{6})$/i.exec(hexColor);
+  if (!match) {
+    return 1; // assume bright if parsing fails
+  }
+  const intVal = parseInt(match[1], 16);
+  const r = (intVal >> 16) & 0xff;
+  const g = (intVal >> 8) & 0xff;
+  const b = intVal & 0xff;
+
+  const rLin = srgbToLinear(r);
+  const gLin = srgbToLinear(g);
+  const bLin = srgbToLinear(b);
+
+  return 0.2126 * rLin + 0.7152 * gLin + 0.0722 * bLin;
+}
+
+function contrastRatio(lum1, lum2) {
+  const brighter = Math.max(lum1, lum2);
+  const darker = Math.min(lum1, lum2);
+  return (brighter + 0.05) / (darker + 0.05);
+}
+
+function bestTextColorForBackground(hexColor) {
+  const bgLum = relativeLuminance(hexColor);
+  const whiteLum = 1;
+  const blackLum = 0;
+  const contrastWithWhite = contrastRatio(bgLum, whiteLum);
+  const contrastWithBlack = contrastRatio(bgLum, blackLum);
+
+  if (contrastWithWhite >= 4.5 || contrastWithBlack >= 4.5) {
+    return contrastWithWhite > contrastWithBlack ? "#ffffff" : "#000000";
+  }
+
+  // If neither contrast meets AA (unlikely for simple palettes), pick higher contrast.
+  return contrastWithWhite > contrastWithBlack ? "#ffffff" : "#000000";
+}
+
+const LANE_TEXT_COLORS = LANE_BASE_COLORS.map((color) =>
+  bestTextColorForBackground(color)
+);
+
+function laneTextColor(lane) {
+  return LANE_TEXT_COLORS[lane] ?? "#000000";
 }
 
 function resizeCanvasToDisplaySize() {
@@ -989,7 +1042,7 @@ function draw() {
         "700 14px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "top";
-      ctx.fillStyle = "rgba(255,255,255,0.85)";
+      ctx.fillStyle = laneTextColor(l);
       ctx.fillText(label, x, hitY + radius + 10);
       ctx.restore();
     }
@@ -1030,7 +1083,7 @@ function draw() {
         "700 13px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
+      ctx.fillStyle = laneTextColor(n.lane);
       ctx.fillText(label, noteX, y);
       ctx.restore();
     }
