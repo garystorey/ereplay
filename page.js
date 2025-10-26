@@ -100,6 +100,7 @@ const scoreHistory = new Map(); // Map<string, {best, worst, total, runs}>
 let notes = []; // {time, lane, judged:false, hit:false}
 let originalNotes = []; // preserved copy of parsed notes so we can seek/reset
 let floatTexts = []; // {x,y,text,color,ttl}
+let hitEffects = []; // {lane,type,ttl,duration,particles?}
 let judgedCount = 0;
 let score = 0;
 let combo = 0;
@@ -238,6 +239,31 @@ function addFloatText(x, y, text, color) {
   floatTexts.push({ x, y, text, color, ttl: 750 });
 }
 
+function addHitEffect(lane, label) {
+  const type = label.toLowerCase();
+  if (type !== "perfect" && type !== "great") {
+    return;
+  }
+
+  const duration = type === "perfect" ? 520 : 360;
+  const effect = {
+    lane,
+    type,
+    ttl: duration,
+    duration,
+  };
+
+  if (type === "perfect") {
+    effect.particles = Array.from({ length: 14 }, () => ({
+      angle: Math.random() * Math.PI * 2,
+      maxDistance: 60 + Math.random() * 40,
+      size: 1.6 + Math.random() * 1.6,
+    }));
+  }
+
+  hitEffects.push(effect);
+}
+
 function resetStats() {
   judgedCount = 0;
   score = 0;
@@ -251,6 +277,7 @@ function resetStats() {
       "0";
   scoreEl.textContent = "0";
   comboEl.textContent = "0";
+  hitEffects = [];
 }
 
 function resetNoteRuntimeFields(note) {
@@ -869,6 +896,10 @@ function tryHitLane(lane, options = {}) {
 
   scoreEl.textContent = score;
 
+  if (judgement.label === "Perfect" || judgement.label === "Great") {
+    addHitEffect(lane, judgement.label);
+  }
+
   const x = laneToX(lane);
   const msText = delta >= 0 ? `+${delta.toFixed(1)}` : delta.toFixed(1);
   addFloatText(
@@ -1059,6 +1090,75 @@ function draw() {
       ctx.restore();
     }
   }
+
+  for (const effect of hitEffects) {
+    const x = laneToX(effect.lane);
+    const progress = 1 - effect.ttl / effect.duration;
+    const fade = Math.max(0, 1 - progress);
+    ctx.save();
+
+    if (effect.type === "great") {
+      const ringRadius = radius + 10 + progress * 26;
+      ctx.globalAlpha = 0.65 * fade;
+      ctx.lineWidth = 2.5 + progress * 1.5;
+      ctx.strokeStyle = "rgba(46, 204, 113, 0.9)";
+      ctx.beginPath();
+      ctx.arc(x, hitY, ringRadius, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.globalAlpha = 0.4 * fade;
+      ctx.setLineDash([6 + progress * 4, 10]);
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
+      ctx.beginPath();
+      ctx.arc(x, hitY, ringRadius + 8 + progress * 6, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    } else {
+      const burstRadius = radius + 12 + progress * 34;
+      ctx.globalAlpha = 0.75 * fade;
+      ctx.lineWidth = 3.5 + progress * 2.5;
+      ctx.strokeStyle = "rgba(0, 255, 128, 0.95)";
+      ctx.beginPath();
+      ctx.arc(x, hitY, burstRadius, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.globalAlpha = 0.5 * fade;
+      ctx.lineWidth = 1.5 + progress * 1.2;
+      ctx.strokeStyle = "rgba(180, 255, 225, 0.9)";
+      ctx.beginPath();
+      ctx.arc(x, hitY, burstRadius + 14 + progress * 10, 0, Math.PI * 2);
+      ctx.stroke();
+
+      if (effect.particles) {
+        ctx.globalAlpha = 0.85 * fade;
+        for (const particle of effect.particles) {
+          const distance = Math.pow(progress, 0.7) * particle.maxDistance;
+          const px = x + Math.cos(particle.angle) * distance;
+          const py = hitY + Math.sin(particle.angle) * distance;
+          const size = Math.max(0.6, particle.size * (1 - progress * 0.75));
+          const gradient = ctx.createRadialGradient(
+            px,
+            py,
+            0,
+            px,
+            py,
+            size * 4
+          );
+          gradient.addColorStop(0, "rgba(255, 255, 255, 0.95)");
+          gradient.addColorStop(1, "rgba(0, 255, 160, 0)");
+          ctx.fillStyle = gradient;
+          ctx.beginPath();
+          ctx.arc(px, py, size * 3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+
+    ctx.restore();
+    effect.ttl -= 16;
+  }
+  hitEffects = hitEffects.filter((effect) => effect.ttl > 0);
 
   for (const n of notes) {
     if (n.judged && t - n.time > 600) continue;
