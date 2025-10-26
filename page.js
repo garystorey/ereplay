@@ -17,10 +17,10 @@ const KEYS_CODES = [
   "KeyF",
 ];
 const KEYS_LABELS = [
-  "←",
-  "↓",
-  "→",
-  "↑",
+  "⬅",
+  "⬇",
+  "➡",
+  "⬆",
   "P1",
   "K1",
   "P2",
