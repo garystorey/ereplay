@@ -118,10 +118,10 @@ let hitY = 0;
  * Generic helpers used by multiple systems.
  * ====================================== */
 const LANE_BASE_COLORS = [
-  "#ff9e9e", // L
-  "#ff8080", // D
-  "#ff6d66", // R
-  "#ff4d72", // U
+  "#8b001f", // L
+  "#c00039", // D
+  "#a4002c", // R
+  "#d43248", // U
   "#93e098", // P1
   "#9ccfff", // K1
   "#75d779", // P2
