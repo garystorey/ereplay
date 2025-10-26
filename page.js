@@ -21,6 +21,8 @@ const RESULT_COLORS = {
     miss: '#ff4d4f',
 };
 
+const AUTOPLAY_MISS_RATE = 0.05;
+
 /* ========== DOM references ==========
  * Cached references to frequently accessed DOM elements.
  * ===================================== */
@@ -688,13 +690,13 @@ function autoPlayStep(t) {
         if (dt < -100 || dt > 100) continue;
 
         const rand = Math.random();
-        if (rand < 0.15) continue;
+        if (rand < AUTOPLAY_MISS_RATE) continue;
 
         let offset;
         const accuracy = Math.random();
-        if (accuracy < 0.15) {
+        if (accuracy < 0.25) {
             offset = (Math.random() * 2 - 1) * (PERFECT_WIN * 0.8);
-        } else if (accuracy < 0.4) {
+        } else if (accuracy < 0.5) {
             const direction = Math.random() > 0.5 ? 1 : -1;
             offset = direction * (PERFECT_WIN + Math.random() * (GREAT_WIN - PERFECT_WIN));
         } else if (accuracy < 0.75) {
