@@ -629,7 +629,10 @@ function tryHitLane(lane) {
     target.hit = true;
     score += judgement.score;
     combo += 1;
-    if (combo > longestCombo) longestCombo = combo;
+    if (combo > longestCombo) {
+        longestCombo = combo;
+        comboEl.textContent = longestCombo;
+    }
     judgedCount += 1;
 
     if (judgement.label === 'Perfect') pPerf.textContent = +pPerf.textContent + 1;
@@ -637,7 +640,6 @@ function tryHitLane(lane) {
     else pOk.textContent = +pOk.textContent + 1;
 
     scoreEl.textContent = score;
-    comboEl.textContent = combo;
 
     const x = laneToX(lane);
     const msText = delta >= 0 ? `+${delta.toFixed(1)}` : delta.toFixed(1);
@@ -746,7 +748,6 @@ function draw() {
             n.hit = false;
             judgedCount += 1;
             combo = 0;
-            comboEl.textContent = combo;
             pMiss.textContent = +pMiss.textContent + 1;
             const x = laneToX(n.lane);
             addFloatText(x, hitY + 14, 'Miss', RESULT_COLORS.miss);

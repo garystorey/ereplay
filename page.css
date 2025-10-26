@@ -34,6 +34,16 @@
             position: sticky;
             top: 0;
             z-index: 2;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+
+        .logo {
+            font-size: 1.25rem;
+            letter-spacing: 0.08em;
         }
 
         main {
@@ -52,9 +62,9 @@
 
         .results-overlay {
             position: fixed;
-            top: 50%;
+            top: 5vh;
             left: 50%;
-            transform: translate(-50%, -50%);
+            transform: translateX(-50%);
             background: var(--panel);
             border: 1px solid #2f3a6b;
             border-radius: 12px;
@@ -63,9 +73,12 @@
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.3s ease;
-            width: min(90vw, 960px);
-            min-width: 340px;
-            padding: 1.5rem;
+            width: min(96vw, 1280px);
+            min-width: 360px;
+            max-height: calc(100vh - 10vh);
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
         }
 
         .results-overlay.visible {
@@ -124,8 +137,7 @@
             align-items: stretch;
             width: 100%;
             gap: 1.5rem;
-            max-height: 80vh;
-            overflow-y: auto;
+            flex: 1;
         }
 
         .charts-row {
@@ -298,10 +310,11 @@
 
         .hud {
             display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             gap: 8px;
-            margin-top: 8px;
             font-size: 14px;
+            flex: 1;
+            min-width: 320px;
         }
 
         .stat {
