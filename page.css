@@ -74,7 +74,7 @@ main {
   transition: opacity 0.3s ease;
   width: min(96vw, 1280px);
   min-width: 360px;
-  max-height: calc(100vh - 10vh);
+  height: 80vh;
   padding: 2rem;
   display: flex;
   flex-direction: column;
