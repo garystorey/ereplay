@@ -48,6 +48,7 @@ const RESULT_COLORS = {
 };
 
 const AUTOPLAY_MISS_RATE = 0.12;
+const AUTOPLAY_HIT_WINDOW = 18; // ms window around the planned hit time
 
 /* ========== DOM references ==========
  * Cached references to frequently accessed DOM elements.
@@ -161,6 +162,15 @@ function resetStats() {
       "0";
   scoreEl.textContent = "0";
   comboEl.textContent = "0";
+}
+
+function resetNoteRuntimeFields(note) {
+  note.judged = false;
+  note.hit = false;
+  note._y = undefined;
+  delete note._autoPlanned;
+  delete note._autoWillMiss;
+  delete note._autoTargetTime;
 }
 
 function hashData(data) {
@@ -578,8 +588,16 @@ preRollMs.addEventListener("input", () => {
 
 loadBtn.addEventListener("click", () => {
   const { meta, notes: parsed } = parseData(inputData.value);
-  originalNotes = parsed.map((n) => ({ ...n }));
-  notes = originalNotes.map((n) => ({ ...n }));
+  originalNotes = parsed.map((n) => {
+    const clone = { ...n };
+    resetNoteRuntimeFields(clone);
+    return clone;
+  });
+  notes = originalNotes.map((n) => {
+    const clone = { ...n };
+    resetNoteRuntimeFields(clone);
+    return clone;
+  });
   setMetaLine(meta);
   resetStats();
   pauseGame();
@@ -595,7 +613,11 @@ playBtn.addEventListener("click", () => {
     const randomData = generateRandomData();
     inputData.value = JSON.stringify(randomData, null, 2);
     const { meta, notes: parsed } = parseData(inputData.value);
-    originalNotes = parsed.map((n) => ({ ...n }));
+    originalNotes = parsed.map((n) => {
+      const clone = { ...n };
+      resetNoteRuntimeFields(clone);
+      return clone;
+    });
     setMetaLine(meta);
   }
   startPreRoll();
@@ -614,13 +636,17 @@ function seekToStart() {
   startTime = null;
   playing = false;
   if (originalNotes && originalNotes.length) {
-    notes = originalNotes.map((n) => ({ ...n }));
+    notes = originalNotes.map((n) => {
+      const clone = { ...n };
+      resetNoteRuntimeFields(clone);
+      return clone;
+    });
   } else {
-    for (const n of notes) {
-      n.judged = false;
-      n.hit = false;
-      n._y = undefined;
-    }
+    notes = notes.map((n) => {
+      const clone = { ...n };
+      resetNoteRuntimeFields(clone);
+      return clone;
+    });
   }
   resetStats();
 }
@@ -628,18 +654,25 @@ function seekToStart() {
 function startPreRoll(isRestart = false) {
   if ((!originalNotes || !originalNotes.length) && inputData.value) {
     const parsed = parseData(inputData.value);
-    originalNotes = parsed.notes.map((n) => ({ ...n }));
+    originalNotes = parsed.notes.map((n) => {
+      const clone = { ...n };
+      resetNoteRuntimeFields(clone);
+      return clone;
+    });
   }
 
   if (originalNotes && originalNotes.length) {
-    notes = originalNotes.map((n) => ({
-      ...n,
-      time: n.time,
-      judged: false,
-      hit: false,
-    }));
+    notes = originalNotes.map((n) => {
+      const clone = { ...n };
+      resetNoteRuntimeFields(clone);
+      return clone;
+    });
   } else {
-    notes = notes.map((n) => ({ ...n, judged: false, hit: false }));
+    notes = notes.map((n) => {
+      const clone = { ...n };
+      resetNoteRuntimeFields(clone);
+      return clone;
+    });
   }
 
   resetStats();
@@ -763,35 +796,48 @@ function autoPlayStep(t) {
   for (const n of notes) {
     if (n.judged) continue;
     const dt = t - n.time;
-    if (dt < -100 || dt > 100) continue;
+    if (dt < -200) continue;
 
-    const rand = Math.random();
-    if (rand < AUTOPLAY_MISS_RATE) continue;
-
-    let offset;
-    const accuracy = Math.random();
-    if (accuracy < 0.1) {
-      offset = (Math.random() * 2 - 1) * (PERFECT_WIN * 0.8);
-    } else if (accuracy < 0.3) {
-      const direction = Math.random() > 0.5 ? 1 : -1;
-      offset =
-        direction * (PERFECT_WIN + Math.random() * (GREAT_WIN - PERFECT_WIN));
-    } else if (accuracy < 0.65) {
-      const direction = Math.random() > 0.5 ? 1 : -1;
-      const spread = GOOD_WIN - GREAT_WIN;
-      const bias = 0.25 + Math.random() * 0.75;
-      offset = direction * (GREAT_WIN + bias * spread);
-    } else {
-      const direction = Math.random() > 0.5 ? 1 : -1;
-      const spread = OK_WIN - GOOD_WIN;
-      const bias = 0.5 + Math.random() * 0.5;
-      offset = direction * (GOOD_WIN + bias * spread);
+    if (!n._autoPlanned) {
+      n._autoPlanned = true;
+      if (Math.random() < AUTOPLAY_MISS_RATE) {
+        n._autoWillMiss = true;
+      } else {
+        let offset;
+        const accuracy = Math.random();
+        if (accuracy < 0.1) {
+          offset = (Math.random() * 2 - 1) * (PERFECT_WIN * 0.8);
+        } else if (accuracy < 0.3) {
+          const direction = Math.random() > 0.5 ? 1 : -1;
+          offset =
+            direction *
+            (PERFECT_WIN + Math.random() * (GREAT_WIN - PERFECT_WIN));
+        } else if (accuracy < 0.65) {
+          const direction = Math.random() > 0.5 ? 1 : -1;
+          const spread = GOOD_WIN - GREAT_WIN;
+          const bias = 0.25 + Math.random() * 0.75;
+          offset = direction * (GREAT_WIN + bias * spread);
+        } else {
+          const direction = Math.random() > 0.5 ? 1 : -1;
+          const spread = OK_WIN - GOOD_WIN;
+          const bias = 0.5 + Math.random() * 0.5;
+          offset = direction * (GOOD_WIN + bias * spread);
+        }
+        n._autoTargetTime = n.time + offset;
+        n._autoWillMiss = false;
+      }
     }
 
-    const hitTime = n.time + offset;
-    if (Math.abs(t - hitTime) < 5) {
-      tryHitLane(n.lane);
+    if (n._autoWillMiss) continue;
+
+    const targetTime = n._autoTargetTime ?? n.time;
+    if (t + AUTOPLAY_HIT_WINDOW < targetTime) continue;
+    if (t - targetTime > OK_WIN) {
+      n._autoWillMiss = true;
+      continue;
     }
+
+    tryHitLane(n.lane);
   }
 }
 
