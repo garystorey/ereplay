@@ -189,6 +189,13 @@ function laneTextColor(lane) {
   return LANE_TEXT_COLORS[lane] ?? "#000000";
 }
 
+function laneTextShadowColor(lane) {
+  const textColor = (laneTextColor(lane) || "#000000").toLowerCase();
+  return textColor === "#000000"
+    ? "rgba(255, 255, 255, 0.55)"
+    : "rgba(0, 0, 0, 0.65)";
+}
+
 function resizeCanvasToDisplaySize() {
   const dpr = Math.max(1, window.devicePixelRatio || 1);
   const cssW = canvas.clientWidth;
@@ -1039,10 +1046,12 @@ function draw() {
     if (label) {
       ctx.save();
       ctx.font =
-        "700 14px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
+        "800 16px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "top";
       ctx.fillStyle = laneTextColor(l);
+      ctx.shadowColor = laneTextShadowColor(l);
+      ctx.shadowBlur = 6;
       ctx.fillText(label, x, hitY + radius + 10);
       ctx.restore();
     }
@@ -1080,10 +1089,12 @@ function draw() {
     if (label) {
       ctx.save();
       ctx.font =
-        "700 13px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
+        "800 16px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
+      ctx.fillStyle = laneTextColor(n.lane);
+      ctx.shadowColor = laneTextShadowColor(n.lane);
+      ctx.shadowBlur = 8;
       ctx.fillText(label, noteX, y);
       ctx.restore();
     }
