@@ -213,6 +213,33 @@
             text-shadow: 0 0 10px rgba(98, 210, 111, 0.3);
         }
 
+        .results-stat {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .results-stat .stat-title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        .results-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px 16px;
+        }
+
+        .results-list .result-label {
+            display: inline-flex;
+            align-items: baseline;
+            gap: 4px;
+            font-size: 0.75rem;
+        }
+
         .result-label {
             font-weight: 600;
         }
