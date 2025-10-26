@@ -195,7 +195,7 @@ function laneTextColor(lane) {
 function laneTextShadowColor(lane) {
   const textColor = (laneTextColor(lane) || "#000000").toLowerCase();
   return textColor === "#000000"
-    ? "rgba(255, 255, 255, 0.55)"
+    ? "rgba(255, 255, 255, 0.85)"
     : "rgba(0, 0, 0, 0.65)";
 }
 
