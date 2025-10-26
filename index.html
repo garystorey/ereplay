@@ -11,7 +11,21 @@
 
 <body>
     <header>
-        <strong>EReplay</strong>
+        <strong class="logo">EReplay</strong>
+        <div class="hud" aria-label="Performance stats">
+            <div class="stat">Score<br><span class="big" id="scoreEl">0</span></div>
+            <div class="stat">Streak<br><span class="big" id="comboEl">0</span></div>
+            <div class="stat results-stat">
+                <span class="stat-title">Results</span>
+                <div class="results-list">
+                    <span class="result-label perfect">Perfect:<span id="pPerf">0</span></span>
+                    <span class="result-label good">Good:<span id="pGood">0</span></span>
+                    <span class="result-label okay">Okay:<span id="pOk">0</span></span>
+                    <span class="result-label miss">Miss:<span id="pMiss">0</span></span>
+                </div>
+            </div>
+            <div class="stat">Now<br><span class="big" id="timeEl">0.000s</span></div>
+        </div>
     </header>
 
     <main>
@@ -33,12 +47,12 @@
                     <input id="preRollMs" type="range" min="1000" max="5000" step="1000" value="3000" />
                     <p>time before the first button hits</p>
                 </label>
-                <div class="row" style="align-items:center">
-                    <label style="display:flex; gap:8px; align-items:center; margin:0">
+                <div class="row">
+                    <label>
                         <input type="checkbox" id="autoplay" />
                         <span>Autoplay</span>
                     </label>
-                    <label style="display:flex; gap:8px; align-items:center; margin:0">
+                    <label>
                         <input type="checkbox" id="loopChk" />
                         <span>Loop</span>
                     </label>
@@ -57,17 +71,6 @@
             <div id="canvasWrap">
                 <canvas id="gameCanvas" width="1280" height="720" aria-label="Gameplay Area"></canvas>
             </div>
-            <div class="hud">
-                <div class="stat">Score<br><span class="big" id="scoreEl">0</span></div>
-                <div class="stat">Streak<br><span class="big" id="comboEl">0</span></div>
-                <div class="stat">Results<br>
-                    <span>Perfect: <span id="pPerf">0</span></span><br />
-                    <span>Good: <span id="pGood">0</span></span><br />
-                    <span>Okay: <span id="pOk">0</span></span><br />
-                    <span>Miss: <span id="pMiss">0</span></span>
-                </div>
-                <div class="stat">Now<br><span class="big" id="timeEl">0.000s</span></div>
-            </div>
         </section>
     </main>
 
@@ -84,7 +87,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="./page.js"></script>
 
-    </script>
 </body>
 
 </html>
