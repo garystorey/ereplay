@@ -960,11 +960,23 @@ function draw() {
 
   for (let l = 0; l < LANES; l++) {
     const x = laneToX(l);
+    const label = KEYS_LABELS[l] ?? "";
     ctx.beginPath();
     ctx.lineWidth = 2;
     ctx.strokeStyle = "rgba(255,255,255,0.06)";
     ctx.arc(x, hitY, radius + 6, 0, Math.PI * 2);
     ctx.stroke();
+
+    if (label) {
+      ctx.save();
+      ctx.font =
+        "700 14px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "top";
+      ctx.fillStyle = "rgba(255,255,255,0.85)";
+      ctx.fillText(label, x, hitY + radius + 10);
+      ctx.restore();
+    }
   }
 
   for (const n of notes) {
@@ -978,8 +990,11 @@ function draw() {
 
     if (y < topMargin - 50 || y > canvas.clientHeight + 50) continue;
 
+    const noteX = laneToX(n.lane);
+    const label = KEYS_LABELS[n.lane] ?? "";
+
     ctx.beginPath();
-    ctx.arc(laneToX(n.lane), y, radius, 0, Math.PI * 2);
+    ctx.arc(noteX, y, radius, 0, Math.PI * 2);
     ctx.fillStyle = laneColor(n.lane);
     ctx.globalAlpha = n.judged ? 0.25 : 0.95;
     ctx.fill();
@@ -990,6 +1005,17 @@ function draw() {
       ctx.stroke();
     }
     ctx.globalAlpha = 1;
+
+    if (label) {
+      ctx.save();
+      ctx.font =
+        "700 13px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
+      ctx.fillText(label, noteX, y);
+      ctx.restore();
+    }
   }
 
   for (const f of floatTexts) {
