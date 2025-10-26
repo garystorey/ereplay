@@ -43,8 +43,7 @@ const autoplayChk = document.getElementById('autoplay');
 const loopChk = document.getElementById('loopChk');
 const preRollMs = document.getElementById('preRollMs');
 const preRollLbl = document.getElementById('preRollLbl');
-const legend = document.getElementById('legend');
-const pads = document.getElementById('pads');
+const laneGrid = document.getElementById('laneGrid');
 const resultsOverlay = document.getElementById('resultsOverlay');
 const chartGrid = document.getElementById('chartGrid');
 const chartBackdrop = document.getElementById('chartBackdrop');
@@ -467,16 +466,27 @@ function setMetaLine(meta) {
 }
 
 function fillLegendAndPads() {
-    legend.innerHTML = '';
-    pads.innerHTML = '';
+    laneGrid.innerHTML = '';
     for (let l = 0; l < LANES; l++) {
+        const laneCell = document.createElement('div');
+        laneCell.className = 'lane-cell';
+
+        const marker = document.createElement('div');
+        marker.className = 'lane-circle';
+        marker.style.setProperty('--lane-color', laneColor(l));
+        marker.setAttribute('aria-hidden', 'true');
+        marker.title = `Lane ${l + 1}`;
+
         const pad = document.createElement('div');
         pad.className = 'pad';
         pad.textContent = KEYS_LABELS[l];
         pad.style.borderColor = '#2b3569';
         pad.style.color = laneColor(l);
         pad.addEventListener('pointerdown', () => tryHitLane(l));
-        pads.appendChild(pad);
+
+        laneCell.appendChild(marker);
+        laneCell.appendChild(pad);
+        laneGrid.appendChild(laneCell);
     }
 }
 

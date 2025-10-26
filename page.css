@@ -329,29 +329,55 @@
             font-size: 20px;
         }
 
-        .legend {
-            display: grid;
-            grid-template-columns: repeat(14, 1fr);
-            gap: 4px;
-            margin-top: 8px;
-        }
-
-        .laneKey {
-            text-align: center;
-            background: #11162b;
-            border: 1px solid #1f2440;
-            border-radius: 6px;
-            padding: 6px 0;
-            font-weight: 700;
-            font-size: 12px;
+        .stat-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
             color: var(--muted);
+            margin-bottom: 4px;
         }
 
-        .pads {
+        .result-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .lane-grid {
             display: grid;
-            grid-template-columns: repeat(14, 1fr);
+            grid-template-columns: repeat(14, minmax(0, 1fr));
+            gap: 10px;
+            margin-top: 12px;
+            overflow-x: auto;
+        }
+
+        .lane-cell {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             gap: 6px;
-            margin-top: 8px;
+        }
+
+        .stat-results {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .lane-circle {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: var(--lane-color, #1a2244);
+            border: 2px solid var(--lane-color, #2f3a6b);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: #0f1220;
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.35);
+            font-size: 0.9rem;
         }
 
         .pad {
@@ -362,6 +388,7 @@
             background: #1a2244;
             border: 1px solid #273053;
             color: var(--muted);
+            width: 100%;
         }
 
         .pad:active {

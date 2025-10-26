@@ -15,11 +15,14 @@
         <div class="hud" aria-label="Performance stats">
             <div class="stat">Score<br><span class="big" id="scoreEl">0</span></div>
             <div class="stat">Longest Streak<br><span class="big" id="comboEl">0</span></div>
-            <div class="stat">Results<br>
-                <span class="result-label perfect">Perfect: <span id="pPerf">0</span></span><br />
-                <span class="result-label good">Good: <span id="pGood">0</span></span><br />
-                <span class="result-label okay">Okay: <span id="pOk">0</span></span><br />
-                <span class="result-label miss">Miss: <span id="pMiss">0</span></span>
+            <div class="stat stat-results">
+                <div class="stat-title">Results</div>
+                <div class="result-list">
+                    <span class="result-label perfect">Perfect: <span id="pPerf">0</span></span>
+                    <span class="result-label good">Good: <span id="pGood">0</span></span>
+                    <span class="result-label okay">Okay: <span id="pOk">0</span></span>
+                    <span class="result-label miss">Miss: <span id="pMiss">0</span></span>
+                </div>
             </div>
             <div class="stat">Now<br><span class="big" id="timeEl">0.000s</span></div>
         </div>
@@ -59,8 +62,7 @@
             <label for="inputData">Recorded Data (JSON)</label>
             <textarea id="inputData" spellcheck="false"></textarea>
             <small class="meta" id="metaLine"></small>
-            <div class="legend" id="legend"></div>
-            <div class="pads" id="pads"></div>
+            <div class="lane-grid" id="laneGrid" aria-label="Lane indicators and pads"></div>
         </section>
 
         <!-- Right: game canvas + HUD -->
