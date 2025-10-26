@@ -17,10 +17,10 @@ const KEYS_CODES = [
   "KeyF",
 ];
 const KEYS_LABELS = [
-  "L",
-  "D",
-  "R",
-  "U",
+  "←",
+  "↓",
+  "→",
+  "↑",
   "P1",
   "K1",
   "P2",
@@ -1030,7 +1030,7 @@ function draw() {
         "700 13px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
+      ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
       ctx.fillText(label, noteX, y);
       ctx.restore();
     }
