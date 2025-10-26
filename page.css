@@ -4,7 +4,8 @@
             --ink: #e7e9f5;
             --muted: #9aa3c0;
             --accent: #7aa7ff;
-            --perfect: #62d26f;
+            --perfect: #00ff80;
+            --great: #2ecc71;
             --good: #f6d860;
             --okay: #ff8c42;
             --miss: #ff4d4f;
@@ -246,6 +247,10 @@
 
         .result-label.perfect {
             color: var(--perfect);
+        }
+
+        .result-label.great {
+            color: var(--great);
         }
 
         .result-label.good {

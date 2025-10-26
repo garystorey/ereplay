@@ -4,16 +4,18 @@
 const LANES = 12;
 const KEYS_CODES = ['ArrowLeft', 'ArrowDown', 'ArrowRight', 'ArrowUp', 'KeyQ', 'KeyW', 'KeyE', 'KeyR', 'KeyA', 'KeyS', 'KeyD', 'KeyF'];
 const KEYS_LABELS = ['L', 'D', 'R', 'U', 'P1', 'P2', 'P3', 'P4', 'K1', 'K2', 'K3', 'K4'];
-const PERFECT_WIN = 10;   // ms
-const GOOD_WIN = 40;      // ms
-const OK_WIN = 80;        // ms
-const LATE_MISS = 120;    // ms after scheduled time
+const PERFECT_WIN = 5;    // ms
+const GREAT_WIN = 10;     // ms
+const GOOD_WIN = 20;      // ms
+const OK_WIN = 30;        // ms
+const LATE_MISS = 50;     // ms after scheduled time
 let DROP_MS = 2000;       // ms from spawn to hit line
 const GLOBAL_OFFSET = 0;  // fixed: no manual calibration (ms)
 let PRE_ROLL_MS = 3000;   // ms of pre-roll (adjustable)
 
 const RESULT_COLORS = {
-    perfect: '#62d26f',
+    perfect: '#00ff80',
+    great: '#2ecc71',
     good: '#f6d860',
     okay: '#ff8c42',
     miss: '#ff4d4f',
@@ -28,6 +30,7 @@ const scoreEl = document.getElementById('scoreEl');
 const comboEl = document.getElementById('comboEl');
 const timeEl = document.getElementById('timeEl');
 const pPerf = document.getElementById('pPerf');
+const pGreat = document.getElementById('pGreat');
 const pGood = document.getElementById('pGood');
 const pOk = document.getElementById('pOk');
 const pMiss = document.getElementById('pMiss');
@@ -120,7 +123,7 @@ function resetStats() {
     score = 0;
     combo = 0;
     longestCombo = 0;
-    pPerf.textContent = pGood.textContent = pOk.textContent = pMiss.textContent = '0';
+    pPerf.textContent = pGreat.textContent = pGood.textContent = pOk.textContent = pMiss.textContent = '0';
     scoreEl.textContent = '0';
     comboEl.textContent = '0';
 }
@@ -176,12 +179,13 @@ function createPieChart(canvasEl, stats) {
     canvasEl.chart = new Chart(chartCtx, {
         type: 'pie',
         data: {
-            labels: ['Perfect', 'Good', 'Okay', 'Miss'],
+            labels: ['Perfect', 'Great', 'Good', 'Okay', 'Miss'],
             datasets: [
                 {
-                    data: [stats.perfect, stats.good, stats.okay, stats.miss],
+                    data: [stats.perfect ?? 0, stats.great ?? 0, stats.good ?? 0, stats.okay ?? 0, stats.miss ?? 0],
                     backgroundColor: [
                         RESULT_COLORS.perfect,
+                        RESULT_COLORS.great,
                         RESULT_COLORS.good,
                         RESULT_COLORS.okay,
                         RESULT_COLORS.miss,
@@ -233,6 +237,7 @@ function createSummaryItem(label, value) {
 function updateHighScore() {
     const currentStats = {
         perfect: +pPerf.textContent,
+        great: +pGreat.textContent,
         good: +pGood.textContent,
         okay: +pOk.textContent,
         miss: +pMiss.textContent,
@@ -253,7 +258,18 @@ function updateHighScore() {
 
     const record = scoreHistory.get(currentDataHash);
     record.runs += 1;
+    const ensureStatFields = (obj) => {
+        obj.perfect ??= 0;
+        obj.great ??= 0;
+        obj.good ??= 0;
+        obj.okay ??= 0;
+        obj.miss ??= 0;
+    };
+    ensureStatFields(record.best);
+    ensureStatFields(record.worst);
+    ensureStatFields(record.total);
     record.total.perfect += currentStats.perfect;
+    record.total.great += currentStats.great;
     record.total.good += currentStats.good;
     record.total.okay += currentStats.okay;
     record.total.miss += currentStats.miss;
@@ -273,6 +289,7 @@ function showResults() {
     chartGrid.innerHTML = '';
     const currentStats = {
         perfect: +pPerf.textContent,
+        great: +pGreat.textContent,
         good: +pGood.textContent,
         okay: +pOk.textContent,
         miss: +pMiss.textContent,
@@ -293,6 +310,16 @@ function showResults() {
     chartGrid.appendChild(summary);
 
     if (record && record.runs > 1) {
+        const ensureStatFields = (obj) => {
+            obj.perfect ??= 0;
+            obj.great ??= 0;
+            obj.good ??= 0;
+            obj.okay ??= 0;
+            obj.miss ??= 0;
+        };
+        ensureStatFields(record.best);
+        ensureStatFields(record.worst);
+        ensureStatFields(record.total);
         const { best, worst, total } = record;
 
         const cumulativeRow = document.createElement('div');
@@ -599,6 +626,7 @@ window.addEventListener('keydown', (e) => {
 function judgeDelta(delta) {
     const ad = Math.abs(delta);
     if (ad <= PERFECT_WIN) return { label: 'Perfect', score: 300, color: RESULT_COLORS.perfect };
+    if (ad <= GREAT_WIN) return { label: 'Great', score: 200, color: RESULT_COLORS.great };
     if (ad <= GOOD_WIN) return { label: 'Good', score: 120, color: RESULT_COLORS.good };
     if (ad <= OK_WIN) return { label: 'Okay', score: 50, color: RESULT_COLORS.okay };
     return null;
@@ -636,6 +664,7 @@ function tryHitLane(lane) {
     judgedCount += 1;
 
     if (judgement.label === 'Perfect') pPerf.textContent = +pPerf.textContent + 1;
+    else if (judgement.label === 'Great') pGreat.textContent = +pGreat.textContent + 1;
     else if (judgement.label === 'Good') pGood.textContent = +pGood.textContent + 1;
     else pOk.textContent = +pOk.textContent + 1;
 
@@ -665,9 +694,12 @@ function autoPlayStep(t) {
         const accuracy = Math.random();
         if (accuracy < 0.15) {
             offset = (Math.random() * 2 - 1) * (PERFECT_WIN * 0.8);
-        } else if (accuracy < 0.65) {
+        } else if (accuracy < 0.4) {
             const direction = Math.random() > 0.5 ? 1 : -1;
-            offset = direction * (PERFECT_WIN + Math.random() * (GOOD_WIN - PERFECT_WIN));
+            offset = direction * (PERFECT_WIN + Math.random() * (GREAT_WIN - PERFECT_WIN));
+        } else if (accuracy < 0.75) {
+            const direction = Math.random() > 0.5 ? 1 : -1;
+            offset = direction * (GREAT_WIN + Math.random() * (GOOD_WIN - GREAT_WIN));
         } else {
             const direction = Math.random() > 0.5 ? 1 : -1;
             offset = direction * (GOOD_WIN + Math.random() * (OK_WIN - GOOD_WIN));
