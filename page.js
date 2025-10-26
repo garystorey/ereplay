@@ -253,16 +253,31 @@ function recalcLayout() {
     proposed = fallback;
   }
 
+  const laneWidth = canvas.clientWidth / LANES;
+  const radius = Math.max(
+    6,
+    Math.min(Math.floor((laneWidth * 0.68) / 2), 24)
+  );
+  const labelTextHeight = 24;
+  const labelPadding = 12;
+  const minTimelineGap = radius + labelPadding + labelTextHeight + 16;
+  const desiredMaxHitY = timelineTop - minTimelineGap;
+  const fallbackMaxHitY = timelineTop - 12;
+  const maxHitYBase = Number.isFinite(desiredMaxHitY)
+    ? Math.min(desiredMaxHitY, fallbackMaxHitY)
+    : fallbackMaxHitY;
+  const maxHitY = Math.max(topMargin + 40, maxHitYBase);
+
   const minHitY = topMargin + 160;
   if (proposed < minHitY) {
     proposed = Math.min(minHitY, gapTarget);
   }
 
-  hitY = Math.min(proposed, timelineTop - 12);
+  hitY = Math.min(proposed, maxHitY);
 
   if (!Number.isFinite(hitY) || hitY < topMargin + 40) {
-    const safeMax = Math.min(fallback, timelineTop - 12);
-    hitY = Math.min(timelineTop - 12, Math.max(topMargin + 40, safeMax));
+    const safeMax = Math.min(fallback, maxHitY);
+    hitY = Math.min(maxHitY, Math.max(topMargin + 40, safeMax));
   }
 }
 recalcLayout();
