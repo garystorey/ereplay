@@ -21,7 +21,7 @@ const RESULT_COLORS = {
     miss: '#ff4d4f',
 };
 
-const AUTOPLAY_MISS_RATE = 0.05;
+const AUTOPLAY_MISS_RATE = 0.12;
 
 /* ========== DOM references ==========
  * Cached references to frequently accessed DOM elements.
@@ -694,17 +694,21 @@ function autoPlayStep(t) {
 
         let offset;
         const accuracy = Math.random();
-        if (accuracy < 0.25) {
+        if (accuracy < 0.1) {
             offset = (Math.random() * 2 - 1) * (PERFECT_WIN * 0.8);
-        } else if (accuracy < 0.5) {
+        } else if (accuracy < 0.3) {
             const direction = Math.random() > 0.5 ? 1 : -1;
             offset = direction * (PERFECT_WIN + Math.random() * (GREAT_WIN - PERFECT_WIN));
-        } else if (accuracy < 0.75) {
+        } else if (accuracy < 0.65) {
             const direction = Math.random() > 0.5 ? 1 : -1;
-            offset = direction * (GREAT_WIN + Math.random() * (GOOD_WIN - GREAT_WIN));
+            const spread = GOOD_WIN - GREAT_WIN;
+            const bias = 0.25 + Math.random() * 0.75;
+            offset = direction * (GREAT_WIN + bias * spread);
         } else {
             const direction = Math.random() > 0.5 ? 1 : -1;
-            offset = direction * (GOOD_WIN + Math.random() * (OK_WIN - GOOD_WIN));
+            const spread = OK_WIN - GOOD_WIN;
+            const bias = 0.5 + Math.random() * 0.5;
+            offset = direction * (GOOD_WIN + bias * spread);
         }
 
         const hitTime = n.time + offset;
