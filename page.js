@@ -116,6 +116,32 @@ let topMargin = 24;
 let hitY = 0;
 let timelineDuration = 0;
 
+const TIMELINE_BOTTOM_MARGIN = 24;
+const TIMELINE_PADDING_X = 32;
+const TIMELINE_PADDING_Y = 12;
+const LANE_TIMELINE_GAP = 32;
+
+function computeTimelineLayout() {
+  const timelineHeight = Math.max(
+    70,
+    Math.min(110, canvas.clientHeight * 0.18)
+  );
+  const timelineTop =
+    canvas.clientHeight - TIMELINE_BOTTOM_MARGIN - timelineHeight;
+  const timelineLeft = TIMELINE_PADDING_X;
+  const timelineWidth = canvas.clientWidth - TIMELINE_PADDING_X * 2;
+  const laneRowHeight =
+    (timelineHeight - TIMELINE_PADDING_Y * 2) / Math.max(1, LANES);
+
+  return {
+    timelineHeight,
+    timelineTop,
+    timelineLeft,
+    timelineWidth,
+    laneRowHeight,
+  };
+}
+
 /* ========== Utility helpers ==========
  * Generic helpers used by multiple systems.
  * ====================================== */
@@ -218,7 +244,26 @@ window.addEventListener("resize", resizeCanvasToDisplaySize);
 
 function recalcLayout() {
   resizeCanvasToDisplaySize();
-  hitY = canvas.clientHeight - 140;
+  const { timelineTop } = computeTimelineLayout();
+  const gapTarget = timelineTop - LANE_TIMELINE_GAP;
+  const fallback = canvas.clientHeight - 140;
+  let proposed = Math.min(fallback, gapTarget);
+
+  if (!Number.isFinite(proposed)) {
+    proposed = fallback;
+  }
+
+  const minHitY = topMargin + 160;
+  if (proposed < minHitY) {
+    proposed = Math.min(minHitY, gapTarget);
+  }
+
+  hitY = Math.min(proposed, timelineTop - 12);
+
+  if (!Number.isFinite(hitY) || hitY < topMargin + 40) {
+    const safeMax = Math.min(fallback, timelineTop - 12);
+    hitY = Math.min(timelineTop - 12, Math.max(topMargin + 40, safeMax));
+  }
 }
 recalcLayout();
 
@@ -1250,16 +1295,15 @@ function draw() {
     }
   }
 
-  const timelineHeight = Math.max(70, Math.min(110, canvas.clientHeight * 0.18));
-  const timelineBottomMargin = 24;
-  const timelinePaddingX = 32;
-  const timelinePaddingY = 12;
-  const timelineTop =
-    canvas.clientHeight - timelineBottomMargin - timelineHeight;
-  const timelineLeft = timelinePaddingX;
-  const timelineWidth = canvas.clientWidth - timelinePaddingX * 2;
-  const laneRowHeight =
-    (timelineHeight - timelinePaddingY * 2) / Math.max(1, LANES);
+  const {
+    timelineHeight,
+    timelineTop,
+    timelineLeft,
+    timelineWidth,
+    laneRowHeight,
+  } = computeTimelineLayout();
+  const clampedTimelineWidth = Math.max(0, timelineWidth);
+  const clampedTimelineHeight = Math.max(0, timelineHeight);
 
   ctx.save();
   ctx.fillStyle = "rgba(10, 14, 36, 0.9)";
@@ -1269,8 +1313,8 @@ function draw() {
   ctx.rect(
     timelineLeft,
     timelineTop,
-    Math.max(0, timelineWidth),
-    Math.max(0, timelineHeight)
+    clampedTimelineWidth,
+    clampedTimelineHeight
   );
   ctx.fill();
   ctx.stroke();
@@ -1280,18 +1324,18 @@ function draw() {
   ctx.rect(
     timelineLeft,
     timelineTop,
-    Math.max(0, timelineWidth),
-    Math.max(0, timelineHeight)
+    clampedTimelineWidth,
+    clampedTimelineHeight
   );
   ctx.clip();
 
   for (let lane = 0; lane < LANES; lane++) {
-    const bandTop = timelineTop + timelinePaddingY + lane * laneRowHeight;
+    const bandTop = timelineTop + TIMELINE_PADDING_Y + lane * laneRowHeight;
     ctx.fillStyle = lane % 2 === 0 ? "rgba(255, 255, 255, 0.035)" : "transparent";
     ctx.fillRect(
       timelineLeft,
       bandTop,
-      Math.max(0, timelineWidth),
+      clampedTimelineWidth,
       Math.max(0, laneRowHeight)
     );
   }
@@ -1301,10 +1345,10 @@ function draw() {
     for (const n of notes) {
       const rawProgress = timelineDuration > 0 ? n.time / timelineDuration : 0;
       const progress = Math.max(0, Math.min(1, rawProgress));
-      const x = timelineLeft + progress * timelineWidth;
+      const x = timelineLeft + progress * clampedTimelineWidth;
       const y =
         timelineTop +
-        timelinePaddingY +
+        TIMELINE_PADDING_Y +
         n.lane * laneRowHeight +
         laneRowHeight / 2;
       const markerRadius = Math.max(2, laneRowHeight * 0.22);
@@ -1327,7 +1371,7 @@ function draw() {
         : playbackTime > 0
         ? 1
         : 0;
-    const cursorX = timelineLeft + cursorProgress * timelineWidth;
+    const cursorX = timelineLeft + cursorProgress * clampedTimelineWidth;
 
     ctx.beginPath();
     ctx.moveTo(cursorX, timelineTop);
@@ -1343,8 +1387,8 @@ function draw() {
     ctx.textBaseline = "middle";
     ctx.fillText(
       "Load data to see the timeline",
-      timelineLeft + timelineWidth / 2,
-      timelineTop + timelineHeight / 2
+      timelineLeft + clampedTimelineWidth / 2,
+      timelineTop + clampedTimelineHeight / 2
     );
   }
 
