@@ -114,6 +114,7 @@ let currentDataHash = "";
 const laneKeyMap = new Map(KEYS_CODES.map((code, lane) => [code, lane]));
 let topMargin = 24;
 let hitY = 0;
+let timelineDuration = 0;
 
 /* ========== Utility helpers ==========
  * Generic helpers used by multiple systems.
@@ -601,6 +602,17 @@ function parseData(jsonStr) {
   return { meta, notes: out };
 }
 
+function updateTimelineDuration(sourceNotes) {
+  if (!sourceNotes || !sourceNotes.length) {
+    timelineDuration = 0;
+    return;
+  }
+  timelineDuration = sourceNotes.reduce(
+    (maxTime, note) => (note.time > maxTime ? note.time : maxTime),
+    0
+  );
+}
+
 function makeBitStringFromLanes(lanes) {
   const arr = new Array(16).fill("0");
   for (const lane of lanes) {
@@ -705,6 +717,7 @@ preRollMs.addEventListener("input", () => {
 
 loadBtn.addEventListener("click", () => {
   const { meta, notes: parsed } = parseData(inputData.value);
+  updateTimelineDuration(parsed);
   originalNotes = parsed.map((n) => {
     const clone = { ...n };
     resetNoteRuntimeFields(clone);
@@ -730,6 +743,7 @@ playBtn.addEventListener("click", () => {
     const randomData = generateRandomData();
     inputData.value = JSON.stringify(randomData, null, 2);
     const { meta, notes: parsed } = parseData(inputData.value);
+    updateTimelineDuration(parsed);
     originalNotes = parsed.map((n) => {
       const clone = { ...n };
       resetNoteRuntimeFields(clone);
@@ -765,12 +779,14 @@ function seekToStart() {
       return clone;
     });
   }
+  updateTimelineDuration(originalNotes && originalNotes.length ? originalNotes : notes);
   resetStats();
 }
 
 function startPreRoll(isRestart = false) {
   if ((!originalNotes || !originalNotes.length) && inputData.value) {
     const parsed = parseData(inputData.value);
+    updateTimelineDuration(parsed.notes);
     originalNotes = parsed.notes.map((n) => {
       const clone = { ...n };
       resetNoteRuntimeFields(clone);
@@ -791,6 +807,7 @@ function startPreRoll(isRestart = false) {
       return clone;
     });
   }
+  updateTimelineDuration(originalNotes && originalNotes.length ? originalNotes : notes);
 
   resetStats();
   pausedAt = 0;
@@ -1232,6 +1249,107 @@ function draw() {
       ctx.restore();
     }
   }
+
+  const timelineHeight = Math.max(70, Math.min(110, canvas.clientHeight * 0.18));
+  const timelineBottomMargin = 24;
+  const timelinePaddingX = 32;
+  const timelinePaddingY = 12;
+  const timelineTop =
+    canvas.clientHeight - timelineBottomMargin - timelineHeight;
+  const timelineLeft = timelinePaddingX;
+  const timelineWidth = canvas.clientWidth - timelinePaddingX * 2;
+  const laneRowHeight =
+    (timelineHeight - timelinePaddingY * 2) / Math.max(1, LANES);
+
+  ctx.save();
+  ctx.fillStyle = "rgba(10, 14, 36, 0.9)";
+  ctx.strokeStyle = "rgba(86, 116, 199, 0.45)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.rect(
+    timelineLeft,
+    timelineTop,
+    Math.max(0, timelineWidth),
+    Math.max(0, timelineHeight)
+  );
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(
+    timelineLeft,
+    timelineTop,
+    Math.max(0, timelineWidth),
+    Math.max(0, timelineHeight)
+  );
+  ctx.clip();
+
+  for (let lane = 0; lane < LANES; lane++) {
+    const bandTop = timelineTop + timelinePaddingY + lane * laneRowHeight;
+    ctx.fillStyle = lane % 2 === 0 ? "rgba(255, 255, 255, 0.035)" : "transparent";
+    ctx.fillRect(
+      timelineLeft,
+      bandTop,
+      Math.max(0, timelineWidth),
+      Math.max(0, laneRowHeight)
+    );
+  }
+
+  if (notes.length) {
+    const effectiveDuration = timelineDuration > 0 ? timelineDuration : 1;
+    for (const n of notes) {
+      const rawProgress = timelineDuration > 0 ? n.time / timelineDuration : 0;
+      const progress = Math.max(0, Math.min(1, rawProgress));
+      const x = timelineLeft + progress * timelineWidth;
+      const y =
+        timelineTop +
+        timelinePaddingY +
+        n.lane * laneRowHeight +
+        laneRowHeight / 2;
+      const markerRadius = Math.max(2, laneRowHeight * 0.22);
+      ctx.beginPath();
+      ctx.globalAlpha = n.judged ? 0.25 : 0.95;
+      ctx.fillStyle = laneColor(n.lane);
+      ctx.arc(x, y, markerRadius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    const playbackTime = prerolling
+      ? 0
+      : playing
+      ? Math.max(0, t)
+      : Math.max(0, pausedAt);
+    const cursorProgress =
+      timelineDuration > 0
+        ? Math.max(0, Math.min(1, playbackTime / effectiveDuration))
+        : playbackTime > 0
+        ? 1
+        : 0;
+    const cursorX = timelineLeft + cursorProgress * timelineWidth;
+
+    ctx.beginPath();
+    ctx.moveTo(cursorX, timelineTop);
+    ctx.lineTo(cursorX, timelineTop + timelineHeight);
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.85)";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  } else {
+    ctx.fillStyle = "rgba(255, 255, 255, 0.45)";
+    ctx.font =
+      "600 14px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(
+      "Load data to see the timeline",
+      timelineLeft + timelineWidth / 2,
+      timelineTop + timelineHeight / 2
+    );
+  }
+
+  ctx.restore();
+  ctx.restore();
 
   const allJudged = notes.length > 0 && notes.every((n) => n.judged);
   if (allJudged && playing) {
