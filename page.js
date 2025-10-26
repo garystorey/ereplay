@@ -1083,7 +1083,7 @@ function draw() {
         "700 13px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillStyle = laneTextColor(n.lane);
+      ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
       ctx.fillText(label, noteX, y);
       ctx.restore();
     }
