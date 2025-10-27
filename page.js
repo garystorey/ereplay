@@ -1355,10 +1355,49 @@ function draw() {
     );
   }
 
+  const totalTimelineDuration = Math.max(
+    PRE_ROLL_MS + timelineDuration,
+    1
+  );
+
+  if (PRE_ROLL_MS > 0) {
+    const preRollWidth = (PRE_ROLL_MS / totalTimelineDuration) * clampedTimelineWidth;
+    if (preRollWidth > 0) {
+      ctx.fillStyle = "rgba(255, 255, 255, 0.06)";
+      ctx.fillRect(
+        timelineLeft,
+        timelineTop,
+        preRollWidth,
+        clampedTimelineHeight
+      );
+
+      ctx.strokeStyle = "rgba(124, 154, 255, 0.55)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(timelineLeft + preRollWidth, timelineTop);
+      ctx.lineTo(timelineLeft + preRollWidth, timelineTop + timelineHeight);
+      ctx.stroke();
+
+      ctx.fillStyle = "rgba(196, 210, 255, 0.6)";
+      ctx.font =
+        "600 12px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
+      ctx.textAlign = "left";
+      ctx.textBaseline = "top";
+      const labelPaddingX = 6;
+      const labelPaddingY = 6;
+      if (preRollWidth > 40 && clampedTimelineHeight > 20) {
+        ctx.fillText(
+          "Pre-roll",
+          timelineLeft + labelPaddingX,
+          timelineTop + labelPaddingY
+        );
+      }
+    }
+  }
+
   if (notes.length) {
-    const effectiveDuration = timelineDuration > 0 ? timelineDuration : 1;
     for (const n of notes) {
-      const rawProgress = timelineDuration > 0 ? n.time / timelineDuration : 0;
+      const rawProgress = (n.time + PRE_ROLL_MS) / totalTimelineDuration;
       const progress = Math.max(0, Math.min(1, rawProgress));
       const x = timelineLeft + progress * clampedTimelineWidth;
       const y =
@@ -1375,17 +1414,23 @@ function draw() {
     }
     ctx.globalAlpha = 1;
 
-    const playbackTime = prerolling
-      ? 0
-      : playing
+    const preRollProgress = prerolling
+      ? PRE_ROLL_MS - Math.max(0, prerollEnd - nowMs())
+      : PRE_ROLL_MS;
+    const playbackTime = playing
       ? Math.max(0, t)
       : Math.max(0, pausedAt);
-    const cursorProgress =
-      timelineDuration > 0
-        ? Math.max(0, Math.min(1, playbackTime / effectiveDuration))
-        : playbackTime > 0
-        ? 1
-        : 0;
+    const cursorTime = Math.max(
+      0,
+      Math.min(
+        totalTimelineDuration,
+        (prerolling ? preRollProgress : PRE_ROLL_MS + playbackTime)
+      )
+    );
+    const cursorProgress = Math.max(
+      0,
+      Math.min(1, cursorTime / totalTimelineDuration)
+    );
     const cursorX = timelineLeft + cursorProgress * clampedTimelineWidth;
 
     ctx.beginPath();
