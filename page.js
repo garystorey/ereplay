@@ -1366,7 +1366,7 @@ function draw() {
         TIMELINE_PADDING_Y +
         n.lane * laneRowHeight +
         laneRowHeight / 2;
-      const markerRadius = Math.max(2, laneRowHeight * 0.22);
+      const markerRadius = Math.max(3, laneRowHeight * 0.32);
       ctx.beginPath();
       ctx.globalAlpha = n.judged ? 0.25 : 0.95;
       ctx.fillStyle = laneColor(n.lane);
@@ -1391,8 +1391,8 @@ function draw() {
     ctx.beginPath();
     ctx.moveTo(cursorX, timelineTop);
     ctx.lineTo(cursorX, timelineTop + timelineHeight);
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.85)";
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = "#3c4c93";
+    ctx.lineWidth = 4;
     ctx.stroke();
   } else {
     ctx.fillStyle = "rgba(255, 255, 255, 0.45)";
