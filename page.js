@@ -30,7 +30,8 @@ const DEFAULT_KEY_LABELS = [
   "P4",
   "K4",
 ];
-let keyLabels = [...DEFAULT_KEY_LABELS];
+let laneVisuals = [];
+let laneTextColors = [];
 const PERFECT_WIN = 5; // ms
 const GREAT_WIN = 10; // ms
 const GOOD_WIN = 20; // ms
@@ -161,7 +162,11 @@ const LANE_BASE_COLORS = [
 ];
 
 function laneColor(lane) {
-  return LANE_BASE_COLORS[lane] ?? "#ffffff";
+  return laneVisuals[lane]?.color ?? LANE_BASE_COLORS[lane] ?? "#ffffff";
+}
+
+function laneLabel(lane) {
+  return laneVisuals[lane]?.label ?? "";
 }
 
 function srgbToLinear(value) {
@@ -209,15 +214,25 @@ function bestTextColorForBackground(hexColor) {
   return contrastWithWhite > contrastWithBlack ? "#ffffff" : "#000000";
 }
 
-const LANE_TEXT_COLORS = LANE_BASE_COLORS.map((color) =>
-  bestTextColorForBackground(color)
-);
+const DEFAULT_LANE_VISUALS = DEFAULT_KEY_LABELS.map((label, lane) => ({
+  label,
+  color: LANE_BASE_COLORS[lane] ?? "#ffffff",
+}));
+
+function refreshLaneTextColors() {
+  laneTextColors = laneVisuals.map(({ color }) =>
+    bestTextColorForBackground(color ?? "#000000")
+  );
+}
+
+laneVisuals = DEFAULT_LANE_VISUALS.map((entry) => ({ ...entry }));
+refreshLaneTextColors();
 
 const FORCE_WHITE_TEXT_LANES = new Set([0, 1, 2, 3]);
 
 function laneTextColor(lane) {
   if (FORCE_WHITE_TEXT_LANES.has(lane)) return "#ffffff";
-  return LANE_TEXT_COLORS[lane] ?? "#000000";
+  return laneTextColors[lane] ?? "#000000";
 }
 
 function laneTextShadowColor(lane) {
@@ -694,6 +709,7 @@ function generateSample() {
       game: "Demo",
       character: "Sampler",
       labels: [...DEFAULT_KEY_LABELS],
+      colors: [...LANE_BASE_COLORS],
     },
     frames,
   };
@@ -730,6 +746,7 @@ function generateRandomData() {
       game: "Random Pattern",
       character: "Auto-Generated",
       labels: [...DEFAULT_KEY_LABELS],
+      colors: [...LANE_BASE_COLORS],
     },
     frames,
   };
@@ -746,23 +763,39 @@ function setMetaLine(meta) {
   metaLine.textContent = parts.join(" • ");
 }
 
-function updateKeyLabelsFromMeta(meta) {
-  const provided = meta && Array.isArray(meta.labels) ? meta.labels : null;
-  const nextLabels = [];
+function updateLaneVisualsFromMeta(meta) {
+  const providedLabels =
+    meta && Array.isArray(meta.labels) ? meta.labels : DEFAULT_KEY_LABELS;
+  const providedColors =
+    meta && Array.isArray(meta.colors) ? meta.colors : LANE_BASE_COLORS;
+
+  const nextVisuals = [];
   for (let i = 0; i < LANES; i++) {
-    if (provided && i < provided.length && provided[i] != null) {
-      nextLabels.push(String(provided[i]));
-    } else {
-      nextLabels.push(DEFAULT_KEY_LABELS[i] ?? "");
+    const defaults = DEFAULT_LANE_VISUALS[i] ?? { label: "", color: "#ffffff" };
+    const label =
+      i < providedLabels.length && providedLabels[i] != null
+        ? String(providedLabels[i])
+        : defaults.label;
+
+    let color = defaults.color;
+    if (i < providedColors.length) {
+      const providedColor = providedColors[i];
+      if (typeof providedColor === "string" && providedColor.trim()) {
+        color = providedColor.trim();
+      }
     }
+
+    nextVisuals.push({ label, color });
   }
-  keyLabels = nextLabels;
+
+  laneVisuals = nextVisuals;
+  refreshLaneTextColors();
   fillLegendAndPads();
 }
 
 function applyMeta(meta) {
   setMetaLine(meta);
-  updateKeyLabelsFromMeta(meta);
+  updateLaneVisualsFromMeta(meta);
 }
 
 function fillLegendAndPads() {
@@ -771,7 +804,7 @@ function fillLegendAndPads() {
   for (let l = 0; l < LANES; l++) {
     const pad = document.createElement("div");
     pad.className = "pad";
-    pad.textContent = keyLabels[l] ?? "";
+    pad.textContent = laneLabel(l);
     pad.style.borderColor = "#2b3569";
     pad.style.color = laneColor(l);
     pad.addEventListener("pointerdown", () => tryHitLane(l));
@@ -1161,7 +1194,7 @@ function draw() {
 
   for (let l = 0; l < LANES; l++) {
     const x = laneToX(l);
-    const label = keyLabels[l] ?? "";
+    const label = laneLabel(l);
     ctx.beginPath();
     ctx.lineWidth = 3;
     ctx.strokeStyle = laneColor(l);
@@ -1265,7 +1298,7 @@ function draw() {
     if (y < topMargin - 50 || y > canvas.clientHeight + 50) continue;
 
     const noteX = laneToX(n.lane);
-    const label = keyLabels[n.lane] ?? "";
+    const label = laneLabel(n.lane);
 
     ctx.beginPath();
     ctx.arc(noteX, y, radius, 0, Math.PI * 2);
