@@ -16,7 +16,7 @@ const KEYS_CODES = [
   "KeyR",
   "KeyF",
 ];
-const KEYS_LABELS = [
+const DEFAULT_KEY_LABELS = [
   "⬅",
   "⬇",
   "➡",
@@ -30,6 +30,7 @@ const KEYS_LABELS = [
   "P4",
   "K4",
 ];
+let keyLabels = [...DEFAULT_KEY_LABELS];
 const PERFECT_WIN = 5; // ms
 const GREAT_WIN = 10; // ms
 const GOOD_WIN = 20; // ms
@@ -692,6 +693,7 @@ function generateSample() {
       start_time: new Date().toISOString(),
       game: "Demo",
       character: "Sampler",
+      labels: [...DEFAULT_KEY_LABELS],
     },
     frames,
   };
@@ -727,6 +729,7 @@ function generateRandomData() {
       start_time: new Date().toISOString(),
       game: "Random Pattern",
       character: "Auto-Generated",
+      labels: [...DEFAULT_KEY_LABELS],
     },
     frames,
   };
@@ -743,21 +746,38 @@ function setMetaLine(meta) {
   metaLine.textContent = parts.join(" • ");
 }
 
+function updateKeyLabelsFromMeta(meta) {
+  const provided = meta && Array.isArray(meta.labels) ? meta.labels : null;
+  const nextLabels = [];
+  for (let i = 0; i < LANES; i++) {
+    if (provided && i < provided.length && provided[i] != null) {
+      nextLabels.push(String(provided[i]));
+    } else {
+      nextLabels.push(DEFAULT_KEY_LABELS[i] ?? "");
+    }
+  }
+  keyLabels = nextLabels;
+  fillLegendAndPads();
+}
+
+function applyMeta(meta) {
+  setMetaLine(meta);
+  updateKeyLabelsFromMeta(meta);
+}
+
 function fillLegendAndPads() {
   legend.innerHTML = "";
   pads.innerHTML = "";
   for (let l = 0; l < LANES; l++) {
     const pad = document.createElement("div");
     pad.className = "pad";
-    pad.textContent = KEYS_LABELS[l];
+    pad.textContent = keyLabels[l] ?? "";
     pad.style.borderColor = "#2b3569";
     pad.style.color = laneColor(l);
     pad.addEventListener("pointerdown", () => tryHitLane(l));
     pads.appendChild(pad);
   }
 }
-
-fillLegendAndPads();
 
 dropMs.addEventListener("input", () => {
   DROP_MS = +dropMs.value;
@@ -782,7 +802,7 @@ loadBtn.addEventListener("click", () => {
     resetNoteRuntimeFields(clone);
     return clone;
   });
-  setMetaLine(meta);
+  applyMeta(meta);
   resetStats();
   pauseGame();
   seekToStart();
@@ -803,7 +823,7 @@ playBtn.addEventListener("click", () => {
       resetNoteRuntimeFields(clone);
       return clone;
     });
-    setMetaLine(meta);
+    applyMeta(meta);
   }
   startPreRoll();
 });
@@ -1139,7 +1159,7 @@ function draw() {
 
   for (let l = 0; l < LANES; l++) {
     const x = laneToX(l);
-    const label = KEYS_LABELS[l] ?? "";
+    const label = keyLabels[l] ?? "";
     ctx.beginPath();
     ctx.lineWidth = 3;
     ctx.strokeStyle = laneColor(l);
@@ -1243,7 +1263,7 @@ function draw() {
     if (y < topMargin - 50 || y > canvas.clientHeight + 50) continue;
 
     const noteX = laneToX(n.lane);
-    const label = KEYS_LABELS[n.lane] ?? "";
+    const label = keyLabels[n.lane] ?? "";
 
     ctx.beginPath();
     ctx.arc(noteX, y, radius, 0, Math.PI * 2);
@@ -1473,7 +1493,7 @@ function draw() {
   inputData.value = "";
   originalNotes = [];
   notes = [];
-  setMetaLine({});
+  applyMeta({});
   dropMsLbl.textContent = DROP_MS;
   preRollLbl.textContent = (PRE_ROLL_MS / 1000).toString();
   requestAnimationFrame(draw);
