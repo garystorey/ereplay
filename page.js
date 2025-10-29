@@ -915,8 +915,10 @@ window.addEventListener("keydown", (e) => {
   const typing =
     active &&
     (active.tagName === "TEXTAREA" ||
-      (active.tagName === "INPUT" && active.type === "text"));
-  if (e.code === "Space" && !typing) {
+      (active.tagName === "INPUT" && active.type === "text") ||
+      active.isContentEditable === true);
+  if (typing) return;
+  if (e.code === "Space") {
     e.preventDefault();
     return;
   }
