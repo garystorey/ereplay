@@ -116,7 +116,7 @@ let topMargin = 24;
 let hitY = 0;
 let timelineDuration = 0;
 
-const TIMELINE_BOTTOM_MARGIN = 24;
+const TIMELINE_TOP_MARGIN = 24;
 const TIMELINE_PADDING_X = 32;
 const TIMELINE_PADDING_Y = 12;
 const LANE_TIMELINE_GAP = 32;
@@ -126,8 +126,7 @@ function computeTimelineLayout() {
     70,
     Math.min(110, canvas.clientHeight * 0.18)
   );
-  const timelineTop =
-    canvas.clientHeight - TIMELINE_BOTTOM_MARGIN - timelineHeight;
+  const timelineTop = TIMELINE_TOP_MARGIN;
   const timelineLeft = TIMELINE_PADDING_X;
   const timelineWidth = canvas.clientWidth - TIMELINE_PADDING_X * 2;
   const laneRowHeight =
@@ -244,40 +243,35 @@ window.addEventListener("resize", resizeCanvasToDisplaySize);
 
 function recalcLayout() {
   resizeCanvasToDisplaySize();
-  const { timelineTop } = computeTimelineLayout();
-  const gapTarget = timelineTop - LANE_TIMELINE_GAP;
-  const fallback = canvas.clientHeight - 140;
-  let proposed = Math.min(fallback, gapTarget);
+  const { timelineTop, timelineHeight } = computeTimelineLayout();
+  const timelineBottom = timelineTop + timelineHeight;
 
-  if (!Number.isFinite(proposed)) {
-    proposed = fallback;
-  }
+  topMargin = timelineBottom + LANE_TIMELINE_GAP;
 
   const laneWidth = canvas.clientWidth / LANES;
   const radius = Math.max(
     6,
     Math.min(Math.floor((laneWidth * 0.68) / 2), 24)
   );
-  const labelTextHeight = 24;
-  const labelPadding = 12;
-  const minTimelineGap = radius + labelPadding + labelTextHeight + 16;
-  const desiredMaxHitY = timelineTop - minTimelineGap;
-  const fallbackMaxHitY = timelineTop - 12;
-  const maxHitYBase = Number.isFinite(desiredMaxHitY)
-    ? Math.min(desiredMaxHitY, fallbackMaxHitY)
-    : fallbackMaxHitY;
-  const maxHitY = Math.max(topMargin + 40, maxHitYBase);
 
   const minHitY = topMargin + 160;
-  if (proposed < minHitY) {
-    proposed = Math.min(minHitY, gapTarget);
+  const maxHitY = Math.max(minHitY, canvas.clientHeight - Math.max(60, radius * 2));
+  let proposed = canvas.clientHeight - 140;
+
+  if (!Number.isFinite(proposed)) {
+    proposed = minHitY + 120;
   }
 
-  hitY = Math.min(proposed, maxHitY);
+  proposed = Math.max(minHitY, Math.min(maxHitY, proposed));
 
-  if (!Number.isFinite(hitY) || hitY < topMargin + 40) {
-    const safeMax = Math.min(fallback, maxHitY);
-    hitY = Math.min(maxHitY, Math.max(topMargin + 40, safeMax));
+  if (!Number.isFinite(proposed) || proposed < minHitY) {
+    proposed = maxHitY;
+  }
+
+  hitY = proposed;
+
+  if (!Number.isFinite(hitY)) {
+    hitY = Math.max(minHitY, maxHitY);
   }
 }
 recalcLayout();
