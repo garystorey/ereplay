@@ -74,11 +74,10 @@ const metaLine = document.getElementById("metaLine");
 const loadBtn = document.getElementById("loadBtn");
 const playBtn = document.getElementById("playBtn");
 const pauseBtn = document.getElementById("pauseBtn");
-const restartBtn = document.getElementById("restartBtn");
 const dropMs = document.getElementById("dropMs");
 const dropMsLbl = document.getElementById("dropMsLbl");
 const autoplayChk = document.getElementById("autoplay");
-const autoplayMode = document.getElementById("autoplayMode");
+const autoplayPerfectChk = document.getElementById("autoplayPerfect");
 const loopChk = document.getElementById("loopChk");
 const preRollMs = document.getElementById("preRollMs");
 const preRollLbl = document.getElementById("preRollLbl");
@@ -87,11 +86,59 @@ const pads = document.getElementById("pads");
 const resultsOverlay = document.getElementById("resultsOverlay");
 const chartGrid = document.getElementById("chartGrid");
 const chartBackdrop = document.getElementById("chartBackdrop");
+const layout = document.getElementById("layout");
+const controlPanel = document.getElementById("controlPanel");
+const togglePanelBtn = document.getElementById("togglePanel");
 
-if (autoplayMode) {
-  autoplayMode.disabled = !autoplayChk.checked;
+const PANEL_STATE_STORAGE_KEY = "ereplay:panelCollapsed";
+
+if (togglePanelBtn && layout && controlPanel) {
+  const applyPanelVisibility = (hidden) => {
+    if (hidden) {
+      controlPanel.setAttribute("hidden", "");
+    } else {
+      controlPanel.removeAttribute("hidden");
+    }
+    layout.classList.toggle("panel-hidden", hidden);
+    togglePanelBtn.classList.toggle("is-collapsed", hidden);
+    togglePanelBtn.setAttribute("aria-expanded", String(!hidden));
+    togglePanelBtn.setAttribute(
+      "aria-label",
+      hidden ? "Show controls panel" : "Hide controls panel"
+    );
+  };
+
+  let panelHidden = false;
+  try {
+    panelHidden = localStorage.getItem(PANEL_STATE_STORAGE_KEY) === "true";
+  } catch (error) {
+    panelHidden = false;
+  }
+
+  applyPanelVisibility(panelHidden);
+
+  togglePanelBtn.addEventListener("click", () => {
+    panelHidden = !panelHidden;
+    applyPanelVisibility(panelHidden);
+    try {
+      localStorage.setItem(
+        PANEL_STATE_STORAGE_KEY,
+        panelHidden ? "true" : "false"
+      );
+    } catch (error) {
+      /* ignore storage errors */
+    }
+  });
+}
+
+if (autoplayPerfectChk) {
+  autoplayPerfectChk.disabled = !autoplayChk.checked;
   autoplayChk.addEventListener("change", () => {
-    autoplayMode.disabled = !autoplayChk.checked;
+    const enabled = autoplayChk.checked;
+    autoplayPerfectChk.disabled = !enabled;
+    if (!enabled) {
+      autoplayPerfectChk.checked = false;
+    }
   });
 }
 
@@ -862,9 +909,6 @@ playBtn.addEventListener("click", () => {
 });
 
 pauseBtn.addEventListener("click", pauseGame);
-restartBtn.addEventListener("click", () => {
-  startPreRoll(true);
-});
 
 /* ========== Gameplay control ==========
  * Core state transitions for starting, pausing, and resetting the song.
@@ -890,7 +934,7 @@ function seekToStart() {
   resetStats();
 }
 
-function startPreRoll(isRestart = false) {
+function startPreRoll() {
   if ((!originalNotes || !originalNotes.length) && inputData.value) {
     const parsed = parseData(inputData.value);
     updateTimelineDuration(parsed.notes);
@@ -1044,8 +1088,8 @@ function autoPlayStep(t) {
   if (!autoplayChk.checked) return;
 
   const mode =
-    autoplayMode && autoplayMode.value
-      ? autoplayMode.value
+    autoplayPerfectChk && autoplayPerfectChk.checked
+      ? AUTOPLAY_MODES.PERFECT
       : AUTOPLAY_MODES.REALISTIC;
 
   for (const n of notes) {
@@ -1509,7 +1553,7 @@ function draw() {
     updateHighScore();
     if (loopChk && loopChk.checked) {
       seekToStart();
-      startPreRoll(true);
+      startPreRoll();
     } else {
       pauseGame();
       const last = Math.max(...notes.map((n) => n.time));

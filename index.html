@@ -11,10 +11,22 @@
 
 <body>
     <header>
-        <strong class="logo">EReplay</strong>
+        <div class="brand">
+            <button
+                id="togglePanel"
+                class="menu-toggle"
+                type="button"
+                aria-expanded="true"
+                aria-controls="controlPanel"
+                aria-label="Hide controls panel"
+            >
+                <span class="menu-icon" aria-hidden="true">☰</span>
+            </button>
+            <strong class="logo">EReplay</strong>
+        </div>
         <div class="hud" aria-label="Performance stats">
-            <div class="stat">Score<br><span class="big" id="scoreEl">0</span></div>
-            <div class="stat">Streak<br><span class="big" id="comboEl">0</span></div>
+            <div class="stat">Score<br><span class="big score-value" id="scoreEl">0</span></div>
+            <div class="stat">Streak<br><span class="big streak-value" id="comboEl">0</span></div>
             <div class="stat results-stat">
                 <span class="stat-title">Results</span>
                 <div class="results-list">
@@ -29,14 +41,17 @@
         </div>
     </header>
 
-    <main>
+    <main id="layout">
         <!-- Left panel: data + controls -->
-        <section class="panel" aria-label="Data and Controls">
+        <section
+            class="panel"
+            id="controlPanel"
+            aria-label="Data and Controls"
+        >
             <div class="row">
-                <button id="loadBtn" title="Parse JSON below into notes">Load Data</button>
+                <button id="loadBtn" title="Parse JSON below into notes">Reload Data</button>
                 <button id="playBtn">Play</button>
                 <button id="pauseBtn">Pause</button>
-                <button id="restartBtn">Restart</button>
             </div>
 
             <div>
@@ -53,12 +68,9 @@
                         <input type="checkbox" id="autoplay" />
                         <span>Autoplay</span>
                     </label>
-                    <label class="autoplay-mode">
-                        Autoplay Style
-                        <select id="autoplayMode">
-                            <option value="realistic">Realistic</option>
-                            <option value="perfect">Perfect</option>
-                        </select>
+                    <label class="autoplay-perfect">
+                        <input type="checkbox" id="autoplayPerfect" />
+                        <span>Perfect</span>
                     </label>
                     <label>
                         <input type="checkbox" id="loopChk" />

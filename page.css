@@ -41,6 +41,47 @@ header {
   flex-wrap: wrap;
 }
 
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.menu-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid #2f3a6b;
+  background: #273053;
+  color: var(--ink);
+  cursor: pointer;
+  transition: filter 0.2s ease, background 0.2s ease;
+  font-size: 1.2rem;
+  line-height: 1;
+  padding: 0;
+}
+
+.menu-toggle:hover,
+.menu-toggle:focus-visible {
+  filter: brightness(1.15);
+}
+
+.menu-toggle.is-collapsed {
+  background: #1f2642;
+}
+
+.menu-icon {
+  display: inline-block;
+  transition: transform 0.2s ease;
+}
+
+.menu-toggle.is-collapsed .menu-icon {
+  transform: rotate(90deg);
+}
+
 .logo {
   font-size: 1.25rem;
   letter-spacing: 0.08em;
@@ -48,13 +89,22 @@ header {
 
 main {
   display: grid;
-  grid-template-columns: 1fr 3fr;
+  grid-template-columns: minmax(260px, 1fr) 3fr;
   gap: 12px;
   padding: 12px;
+  align-items: start;
+}
+
+main.panel-hidden {
+  grid-template-columns: 1fr;
 }
 
 @media (max-width: 1000px) {
   main {
+    grid-template-columns: 1fr;
+  }
+
+  main.panel-hidden {
     grid-template-columns: 1fr;
   }
 }
@@ -274,28 +324,18 @@ label {
   display: block;
   font-size: 12px;
   color: var(--muted);
-  margin-top: 10px;
+  margin-top: 14px;
 }
 
-.autoplay-mode {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+.autoplay-perfect {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   margin-top: 0;
 }
 
-.autoplay-mode select {
-  background: #0b0e1a;
-  color: var(--ink);
-  border: 1px solid #222645;
-  border-radius: 8px;
-  padding: 6px 10px;
-  font-weight: 600;
-}
-
-.autoplay-mode select:disabled {
+.autoplay-perfect input:disabled + span {
   opacity: 0.5;
-  cursor: not-allowed;
 }
 
 textarea {
@@ -312,9 +352,21 @@ textarea {
 
 .row {
   display: flex;
-  gap: 8px;
+  gap: 12px;
   flex-wrap: wrap;
-  margin: 8px 0;
+  margin: 12px 0 0;
+}
+
+.panel > .row:first-child {
+  margin-top: 0;
+}
+
+.row label {
+  margin-top: 0;
+}
+
+.panel > * + * {
+  margin-top: 16px;
 }
 
 button,
@@ -359,8 +411,8 @@ button:hover {
 
 .hud {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
   font-size: 14px;
   flex: 1;
   min-width: 320px;
@@ -376,6 +428,11 @@ button:hover {
 .stat .big {
   font-weight: 800;
   font-size: 20px;
+}
+
+.stat .score-value,
+.stat .streak-value {
+  font-size: 10px;
 }
 
 .legend {
